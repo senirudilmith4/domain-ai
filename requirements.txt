@@ -1,0 +1,21 @@
+# Data handling
+pandas
+PyPDF2
+pdfplumber
+python-docx
+
+# NLP embeddings and RAG
+langchain
+sentence-transformers
+chromadb
+
+# Web/API (optional for later)
+fastapi
+uvicorn
+
+# Utilities
+numpy
+tqdm
+
+# Testing
+pytest
