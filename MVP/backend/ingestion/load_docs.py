@@ -2,11 +2,14 @@ from pathlib import Path
 import pdfplumber
 from docx import Document
 import os # Import os for potential error check
+from MVP.backend.utils.logger import get_logger
 
+logger = get_logger(__name__)
 SCRIPT_DIR = Path(__file__).resolve().parent
 DOCS_PATH = SCRIPT_DIR.parent / "data" / "docs"  # Create a Path object for the documents directory
 
 def load_documents():
+    logger.info(f"Loading documents from: {DOCS_PATH}")
     documents = []
 
     if not DOCS_PATH.exists():
