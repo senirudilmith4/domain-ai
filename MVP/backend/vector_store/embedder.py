@@ -48,10 +48,10 @@ def embed_documents(
         return []
     
     try:
-        logger.info(f"Generating embeddings for {len(valid_chunks)} chunks")
+        logger.info(f"Generating embeddings for {len(valid_chunks)} chunks")  # Log the number of valid chunks
         model = get_embedding_model()
         
-        embeddings = model.encode(
+        embeddings = model.encode( 
             valid_chunks,
             batch_size=batch_size,
             show_progress_bar=show_progress,
