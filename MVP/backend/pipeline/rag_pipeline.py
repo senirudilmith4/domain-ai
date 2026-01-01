@@ -4,10 +4,10 @@ Complete RAG Pipeline: Load -> Chunk -> Embed -> Store -> Query
 
 from typing import List, Dict, Any
 from MVP.backend.utils.logger import get_logger
-from MVP.backend.document_loader import load_documents
-from MVP.backend.chunker import chunk_documents
-from MVP.backend.embedder import embed_documents
-from MVP.backend.vector_store import ChromaVectorStore
+from MVP.backend.ingestion.load_docs import load_documents
+from MVP.backend.ingestion.chunk_docs import chunk_documents
+from MVP.backend.vector_store.embedder import embed_documents
+from MVP.backend.vector_store.chroma_client import ChromaVectorStore
 
 logger = get_logger(__name__)
 
