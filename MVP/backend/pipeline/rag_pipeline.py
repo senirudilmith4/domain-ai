@@ -4,10 +4,10 @@ Complete RAG Pipeline: Load -> Chunk -> Embed -> Store -> Query
 
 from typing import List, Dict, Any
 from MVP.backend.utils.logger import get_logger
-from MVP.backend.ingestion.load_docs import load_documents
-from MVP.backend.ingestion.chunk_docs import chunk_documents
-from MVP.backend.vector_store.embedder import embed_documents
-from MVP.backend.vector_store.chroma_client import ChromaVectorStore
+from MVP.backend.document_loader import load_documents
+from MVP.backend.chunker import chunk_documents
+from MVP.backend.embedder import embed_documents
+from MVP.backend.vector_store import ChromaVectorStore
 
 logger = get_logger(__name__)
 
@@ -264,6 +264,80 @@ class RAGPipeline:
             current_length += len(chunk_text)
         
         return "\n\n".join(context_parts)
+    
+    def answer_with_llm(
+        self,
+        query_text: str,
+        n_results: int = 3,
+        max_context_length: int = 2000
+    ) -> Dict[str, Any]:
+        """
+        Answer a query using RAG: Retrieve context and generate answer with LLM.
+        
+        Args:
+            query_text: User's question
+            n_results: Number of chunks to retrieve for context
+            max_context_length: Maximum context length to send to LLM
+        
+        Returns:
+            Dictionary with answer, context, and metadata
+        """
+        try:
+            # Import here to avoid circular dependency
+            from MVP.backend.llm.client import LLMClient
+            
+            logger.info(f"Processing RAG query: {query_text}")
+            
+            # Step 1: Retrieve relevant context
+            context = self.get_context_for_llm(
+                query_text=query_text,
+                n_results=n_results,
+                max_context_length=max_context_length
+            )
+            
+            if context == "No relevant context found.":
+                logger.warning("No context retrieved for query")
+                return {
+                    "success": False,
+                    "query": query_text,
+                    "answer": "I couldn't find relevant information to answer your question.",
+                    "context": "",
+                    "sources": []
+                }
+            
+            # Step 2: Generate answer using LLM
+            llm = LLMClient()
+            answer = llm.ask(question=query_text, context=context)
+            
+            # Get source information
+            query_result = self.query(query_text, n_results=n_results)
+            sources = [
+                {
+                    "text": r["text"][:100] + "...",
+                    "similarity": r["similarity_score"]
+                }
+                for r in query_result.get("results", [])
+            ]
+            
+            logger.info("RAG answer generated successfully")
+            
+            return {
+                "success": True,
+                "query": query_text,
+                "answer": answer,
+                "context": context,
+                "sources": sources
+            }
+            
+        except Exception as e:
+            logger.error(f"RAG answer generation failed: {e}", exc_info=True)
+            return {
+                "success": False,
+                "query": query_text,
+                "answer": f"Error generating answer: {str(e)}",
+                "context": "",
+                "sources": []
+            }
     
     def clear_collection(self) -> None:
         """Clear all documents from the current collection."""
