@@ -1,13 +1,13 @@
-from fastapi import FastAPI
-import ollama
+from fastapi import FastAPI, HTTPException, Header
+from app.api.routes.ask import ask_router
 
-app = FastAPI()
+app = FastAPI(                # creates a web server
+    title="LLM-RAG API", 
+    version="1.0.0"
+    )     
 
-# @app.get("/")
-# def read_root():
-#     return {"Hello": "World"}
+app.include_router(ask_router, prefix="/api")   # take all the routes defined in ask router and add them to the main app with the prefix /api
 
-@app.post("/generate/")
-def generate_text(prompt: str):
-    response = ollama.chat(model="llama3.2", messages=[{"role": "user", "content": prompt}])
-    return {"response": response["message"]["content"]}
+@app.get("/health")
+def health_check():
+    return {"status": "backend is running"} # defines a simple endpoint to check if the backend is running. When you access /health, it will return a JSON response indicating the status of the backend.
