@@ -26,7 +26,7 @@ def answer_question(question: str, top_k: int):
 
     # 4. Call LLM
     response = ollama.chat(
-        model="llama3",
+        model="llama3.2",
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": full_prompt}

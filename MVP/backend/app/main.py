@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException, Header
-from app.api.routes.ask import ask_router
+from app.api.routes.ask import router as ask_router
 
 app = FastAPI(                # creates a web server
     title="LLM-RAG API", 
