@@ -11,25 +11,28 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 CHROMA_PATH = SCRIPT_DIR.parent / "data" / "chroma_db"
 
 
+
 class ChromaVectorStore:
     """Manages ChromaDB vector store for RAG system."""
-    
-    def __init__(
-        self,
-        persist_directory: Path = CHROMA_PATH,
-        collection_name: str = "documents"
-    ):
-        """
-        Initialize ChromaDB vector store.
-        
-        Args:
-            persist_directory: Directory to persist the database
-            collection_name: Name of the collection to use
-        """
-        self.persist_directory = Path(persist_directory).resolve()
-        self.collection_name = collection_name
-        self._client: Optional[chromadb.ClientAPI] = None
-        self._collection: Optional[chromadb.Collection] = None
+
+    def __init__(self, collection="docs", persist_directory=CHROMA_PATH):
+        # Initialize Chroma client
+        self.client = chromadb.Client(
+            Settings(
+                persist_directory=persist_directory,
+                anonymized_telemetry=False
+            )
+        )
+
+        self.collection_name = collection
+
+        # Create or get existing collection
+        self.collection = self.client.get_or_create_collection(
+            name=self.collection_name,
+            metadata={"hnsw:space": "cosine"}
+        )
+
+       
         
     @property
     def client(self) -> chromadb.ClientAPI:
@@ -89,101 +92,44 @@ class ChromaVectorStore:
             logger.error(f"Failed to get/create collection: {e}", exc_info=True)
             raise
     
-    def add_documents(
-        self,
-        chunks: List[str],
-        embeddings: List[List[float]],
-        metadatas: Optional[List[Dict[str, Any]]] = None,
-        ids: Optional[List[str]] = None
-    ) -> None:
-        """
-        Add documents to the vector store.
-        
-        Args:
-            chunks: Text chunks to store
-            embeddings: Embedding vectors for chunks
-            metadatas: Optional metadata for each chunk (e.g., source file, chunk index)
-            ids: Optional unique IDs for each chunk
-        
-        Raises:
-            ValueError: If chunks and embeddings length mismatch
-        """
-        if not chunks or not embeddings:
-            logger.warning("No chunks or embeddings provided")
-            return
-        
-        if len(chunks) != len(embeddings):
-            raise ValueError(
-                f"Mismatch: {len(chunks)} chunks but {len(embeddings)} embeddings"
-            )
-        
-        try:
-            # Generate IDs if not provided
-            if ids is None:
-                # Use collection count as offset for unique IDs
-                current_count = self.collection.count()
-                ids = [f"chunk_{current_count + i}" for i in range(len(chunks))]
-            
-            # Generate default metadata if not provided
-            if metadatas is None:
-                metadatas = [{"chunk_index": i} for i in range(len(chunks))]
-            
-            logger.info(f"Adding {len(chunks)} documents to collection '{self.collection_name}'")
-            
-            # Add to ChromaDB
-            self.collection.add(
-                documents=chunks,
-                embeddings=embeddings,
-                metadatas=metadatas,
-                ids=ids
-            )
-            
-            logger.info(
-                f"Successfully added {len(chunks)} documents. "
-                f"Total in collection: {self.collection.count()}"
-            )
-            
-        except Exception as e:
-            logger.error(f"Failed to add documents: {e}", exc_info=True)
-            raise
-    
-    def query(
-        self,
-        query_embedding: List[float],
-        n_results: int = 5,
-        where: Optional[Dict[str, Any]] = None,
-        where_document: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
-        """
-        Query the vector store for similar documents.
-        
-        Args:
-            query_embedding: Query embedding vector (384-dim for all-MiniLM-L6-v2)
-            n_results: Number of top results to return
-            where: Optional metadata filter (e.g., {"source": "file1.pdf"})
-            where_document: Optional document content filter
-        
-        Returns:
-            Dictionary with 'documents', 'distances', 'metadatas', and 'ids'
-        """
-        try:
-            logger.info(f"Querying collection for top {n_results} similar documents")
-            
-            results = self.collection.query(
-                query_embeddings=[query_embedding],
-                n_results=n_results,
-                where=where,
-                where_document=where_document
-            )
-            
-            num_results = len(results['documents'][0]) if results['documents'] else 0
-            logger.info(f"Query returned {num_results} results")
-            
-            return results
-            
-        except Exception as e:
-            logger.error(f"Query failed: {e}", exc_info=True)
-            raise
+    def upsert(self, chunks, embeddings, metadatas, source):      # Take text chunks from a document and safely store or update them in ChromaDB
+        ids = [f"{source}_chunk_{i}" for i in range(len(chunks))]
+
+        self.collection.upsert(
+            ids=ids,
+            documents=chunks,
+            embeddings=embeddings,
+            metadatas=metadatas
+        )
+
+
+    def similarity_search(self, query_embedding, top_k=5, where=None):
+        results = self.collection.query(
+            query_embeddings=[query_embedding],
+            n_results=top_k,
+            where=where
+        )
+
+        contexts = []
+        sources = set()
+
+        docs = results.get("documents", [])
+        metas = results.get("metadatas", [])
+        dists = results.get("distances", [])
+
+        if docs and metas:
+            for doc, meta in zip(docs[0], metas[0]):
+                if doc:
+                    contexts.append(doc)
+                    if meta and "source" in meta:
+                        sources.add(meta["source"])
+
+        return {
+            "contexts": contexts,
+            "sources": list(sources),
+            "scores": dists[0] if dists else []
+        }
+   
     
     def get_collection_stats(self) -> Dict[str, Any]:
         """Get statistics about the current collection."""

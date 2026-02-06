@@ -36,4 +36,4 @@ async def ingest_document(ctx: inngest.Context):
 def health_check():
     return {"status": "backend is running"} # defines a simple endpoint to check if the backend is running. When you access /health, it will return a JSON response indicating the status of the backend.
 
-inngest.fast_api.serve(app,inngest_client,[])  # Bridge Inngest with FastAPI, enabling serverless function execution
+inngest.fast_api.serve(app,inngest_client,[ingest_document])  # Bridge Inngest with FastAPI, enabling serverless function execution
