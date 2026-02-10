@@ -3,15 +3,22 @@ pandas
 PyPDF2
 pdfplumber
 python-docx
+llama-index
+pypdf
+
 
 # NLP embeddings and RAG
 langchain
 sentence-transformers
 chromadb
 
-# Web/API (optional for later)
+# Web/API
 fastapi
 uvicorn
+
+# Event-driven workflows
+inngest
+
 
 # Utilities
 numpy
@@ -19,6 +26,3 @@ tqdm
 
 # Testing
 pytest
-
-# 
-inngest
