@@ -2,13 +2,14 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional
 import chromadb
 from chromadb.config import Settings
-from MVP.backend.utils.logger import get_logger
+# from MVP.backend.utils.logger import get_logger
 
-logger = get_logger(__name__)
+# logger = get_logger(__name__)
 
 # Determine the database path relative to this script
 SCRIPT_DIR = Path(__file__).resolve().parent
-CHROMA_PATH = SCRIPT_DIR.parent / "data" / "chroma_db"
+CHROMA_PATH = "data/chroma_db"
+
 
 
 
@@ -32,9 +33,7 @@ class ChromaVectorStore:
             metadata={"hnsw:space": "cosine"}
         )
 
-    def upsert(self, chunks, embeddings, metadatas, source):      # Take text chunks from a document and safely store or update them in ChromaDB
-            ids = [f"{source}_chunk_{i}" for i in range(len(chunks))]
-
+    def upsert(self,ids, chunks, embeddings, metadatas):      # Take text chunks from a document and safely store or update them in ChromaDB
             self.collection.upsert(
                 ids=ids,
                 documents=chunks,

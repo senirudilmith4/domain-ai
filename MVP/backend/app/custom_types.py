@@ -3,7 +3,7 @@ from pydantic import BaseModel
 class RAGChunkAndSrc(BaseModel):  # A chunk of text + where it came from 
  ''' During Ingestion
      PDF → Split into chunks → Attach source ID → Store in vector DB '''
- chunk: list[str]
+ chunks: list[str]
  source_id: str = None
 
 
