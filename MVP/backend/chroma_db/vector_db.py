@@ -21,7 +21,8 @@ class ChromaVectorStore:
         self.client = chromadb.Client(
             Settings(
                 persist_directory=persist_directory,
-                anonymized_telemetry=False
+                anonymized_telemetry=False,
+                is_persistent=True
             )
         )
 
