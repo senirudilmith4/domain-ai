@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 from unittest.mock import MagicMock, patch
 
-from MVP.backend.vector_store.embedder import embed_documents
+from MVP.backend.chroma_db.embedder import embed_documents
 
 
 # -------------------------
