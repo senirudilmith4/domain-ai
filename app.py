@@ -41,7 +41,7 @@ except Exception as e:
 
 class GPAInterventionSystem:
     """
-    Probabilistic Helpful Interventions system for Streamlit
+    Probabilistic Helpful Interventions system for personalized GPA improvement recommendations.
     """
     
     def __init__(self, model, data, target_year: int = 3):
