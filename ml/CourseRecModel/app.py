@@ -253,6 +253,8 @@ class GPAInterventionSystem:
         modified_prob = self.classify_gpa_probability(modified_gpa)
         fpp = self.calculate_fpp(current_prob, modified_prob)
         
+        gpa_change = modified_gpa - current_gpa
+
         return {
             'name': intervention['name'],
             'description': intervention['description'],
@@ -262,7 +264,7 @@ class GPAInterventionSystem:
             'current_gpa': current_gpa,
             'modified_gpa': modified_gpa,
             'gpa_improvement': modified_gpa - current_gpa,
-            'is_phi': fpp >= 1.0
+            'is_phi': (fpp >= 1.0) and (gpa_change > 0)
         }
     
     def generate_interventions(self, student_data: Dict, top_k: int = 5) -> Tuple[float, List[Dict]]:
