@@ -13,7 +13,7 @@ from pathlib import Path
 # from app.api.routes.ask import router as ask_router
 from ingestion.load_docs import DOCS_PATH, load_and_chunk_pdf, embed_texts
 from chroma_db.vector_db import ChromaVectorStore
-from app.custom_types import RAGChunkAndSrc, RAGUpsertResult, RAGSearchResult, RAGQueryResult
+from app.schemas.custom_types import RAGChunkAndSrc, RAGUpsertResult, RAGSearchResult, RAGQueryResult
 from app.OllamaAdapter import OllamaAdapter
 
 load_dotenv()  # Load environment variables from .env file

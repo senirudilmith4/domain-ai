@@ -31,8 +31,6 @@ def load_and_chunk_pdf(path: str):
         chunks.extend(splitter.split_text(t))
     return chunks
 
-     
-
 def embed_texts(texts: list[str]) -> list[list[float]]:
     model = get_embed_model()
     embeddings = model.encode(texts, show_progress_bar=False)
