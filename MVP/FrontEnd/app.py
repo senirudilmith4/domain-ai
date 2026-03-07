@@ -365,16 +365,6 @@ elif menu == "Chat Assistant":
     # ---------------- LEFT SIDE (CHAT UI) ----------------
     with col_chat:
 
-        st.markdown('<div class="css-card" style="height:600px; overflow-y:auto;">', unsafe_allow_html=True)
-
-        chat_container = st.container()
-
-        with chat_container:
-            for msg in st.session_state.messages:
-                with st.chat_message(msg["role"]):
-                    st.markdown(msg["content"])
-
-        st.markdown('</div>', unsafe_allow_html=True)
 
         prompt = st.chat_input("Ask your university question...")
 
