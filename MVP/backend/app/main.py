@@ -8,8 +8,10 @@ from fastapi import FastAPI, HTTPException, Header
 from inngest.experimental import ai  # Simplifies calling LLMs, managing retries, background AI execution
 from dotenv import load_dotenv
 from torch import chunk
+from pathlib import Path
+
 # from app.api.routes.ask import router as ask_router
-from ingestion.load_docs import load_and_chunk_pdf, embed_texts
+from ingestion.load_docs import DOCS_PATH, load_and_chunk_pdf, embed_texts
 from chroma_db.vector_db import ChromaVectorStore
 from app.custom_types import RAGChunkAndSrc, RAGUpsertResult, RAGSearchResult, RAGQueryResult
 from app.OllamaAdapter import OllamaAdapter
@@ -35,10 +37,14 @@ app = FastAPI(                # creates a web server
 )
 async def ingest_document(ctx: inngest.Context): 
     def _load(ctx: inngest.Context) -> RAGChunkAndSrc:
-        pdf_path = ctx.event.data["pdf_path"]  # Get the PDF file path from the event data
-        source_id = ctx.event.data.get("source_id", pdf_path)  # Use source_id from event data if provided, otherwise default to pdf_path
-        chunks = load_and_chunk_pdf(pdf_path)  # Load and chunk the PDF document
-        return RAGChunkAndSrc(chunks=chunks, source_id=source_id)  # Return the chunks along with the source ID 
+        pdf_files = list(DOCS_PATH.glob("*.pdf"))  # List all PDF files in the documents directory
+        if not pdf_files:
+            raise ValueError(f"No PDF files found in {DOCS_PATH}")
+        all_chunks=[]
+        for pdf in pdf_files:
+            chunks = load_and_chunk_pdf(str(pdf))  # Load and chunk the PDF document into smaller text chunks
+            all_chunks.extend(chunks)  # Add the chunks from this PDF to the overall list of chunks
+        return RAGChunkAndSrc(chunks=all_chunks, source_id="university_docs")  # Return the chunks along with the source ID 
     
     def _upsert(chunk_and_src: RAGChunkAndSrc) -> RAGUpsertResult:
         chunks = chunk_and_src.chunks  # Get the list of text chunks from the RAGChunkAndSrc object
@@ -56,11 +62,15 @@ async def ingest_document(ctx: inngest.Context):
     
 
 
+# @inngest_client.create_function(
+#     fn_id= "RAG: Query PDF",  # Unique identifier for the function
+#     trigger=inngest.TriggerEvent(event="rag/query_pdf_ai") 
+#  ) # Specifies the event that triggers this function
+
 @inngest_client.create_function(
     fn_id= "RAG: Query PDF",  # Unique identifier for the function
-    trigger=inngest.TriggerEvent(event="rag/query_pdf_ai") 
- ) # Specifies the event that triggers this function
-
+    trigger=inngest.TriggerEvent(event="rag/query_pdf_ai")  # Specifies the event that triggers this function
+ )
 async def query_pdf_ai(ctx: inngest.Context):
     def _search(question: str, top_k: int =5)-> RAGSearchResult:
         query_vec = embed_texts([question])[0]  # Converts user question into a vector embedding
