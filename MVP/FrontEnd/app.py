@@ -339,7 +339,7 @@ if menu == "Dashboard":
 # 8. MODULE: CHAT ASSISTANT
 # -----------------------------------------------------------------------------
 elif menu == "Chat Assistant":
-
+    
     col_chat, col_info = st.columns([3, 1])
 
     # ---------------- RIGHT SIDE ----------------
@@ -364,7 +364,8 @@ elif menu == "Chat Assistant":
 
     # ---------------- LEFT SIDE (CHAT UI) ----------------
     with col_chat:
-
+        st.title("🎓 University AI Assistant")
+        st.caption("Ask questions about modules, learning outcomes, and academic information.")
 
         prompt = st.chat_input("Ask your university question...")
 
@@ -388,19 +389,20 @@ elif menu == "Chat Assistant":
                 sources = output.get("sources", [])
 
                 # Simulated streaming effect
-                for word in answer.split():
-                    full_response += word + " "
-                    message_placeholder.markdown(full_response)
-                    time.sleep(0.02)
+                for line in answer.split("\n"):
+                    full_response += line + "\n"
+                    message_placeholder.markdown(full_response + "▌")
+                    time.sleep(0.04)
+
+                message_placeholder.markdown(full_response)
 
                 if sources:
-                    with st.expander("Sources"):
-                        for s in sources:
-                            st.markdown(f"- {s}")
-
-            st.session_state.messages.append(
-                {"role": "assistant", "content": answer}
-            )
+                    with st.expander("📚 Sources"):
+                        for s in set(sources):
+                            st.markdown(f"📄 **{s}**")
+                            st.session_state.messages.append(
+                                {"role": "assistant", "content": answer}
+                            )
 # -----------------------------------------------------------------------------
 # 9. MODULE: TASK MANAGER
 # -----------------------------------------------------------------------------

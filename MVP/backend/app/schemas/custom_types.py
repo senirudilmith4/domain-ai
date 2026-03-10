@@ -4,7 +4,7 @@ class RAGChunkAndSrc(BaseModel):  # A chunk of text + where it came from
  ''' During Ingestion
      PDF → Split into chunks → Attach source ID → Store in vector DB '''
  chunks: list[str]
- source_id: str = None
+ sources: list[str]
 
 
 class RAGUpsertResult(BaseModel): # ex : 128 chunks were successfully stored.

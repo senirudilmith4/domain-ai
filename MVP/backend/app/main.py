@@ -40,18 +40,38 @@ async def ingest_document(ctx: inngest.Context):
         pdf_files = list(DOCS_PATH.glob("*.pdf"))  # List all PDF files in the documents directory
         if not pdf_files:
             raise ValueError(f"No PDF files found in {DOCS_PATH}")
-        all_chunks=[]
+        all_chunks = []
+        sources = []
+
         for pdf in pdf_files:
-            chunks = load_and_chunk_pdf(str(pdf))  # Load and chunk the PDF document into smaller text chunks
-            all_chunks.extend(chunks)  # Add the chunks from this PDF to the overall list of chunks
-        return RAGChunkAndSrc(chunks=all_chunks, source_id="university_docs")  # Return the chunks along with the source ID 
-    
+            chunks = load_and_chunk_pdf(str(pdf))
+            pdf_name = pdf.name
+
+            for c in chunks:
+                chunk_with_source = f"Module: {pdf_name}\n\n{c}"
+
+                all_chunks.append(chunk_with_source)
+                sources.append(pdf_name)
+
+        return RAGChunkAndSrc(
+            chunks=all_chunks,
+            sources=sources
+)
     def _upsert(chunk_and_src: RAGChunkAndSrc) -> RAGUpsertResult:
-        chunks = chunk_and_src.chunks  # Get the list of text chunks from the RAGChunkAndSrc object
-        source_id = chunk_and_src.source_id  # Get the source ID associated with the chunks
-        vecs = embed_texts(chunks)  # Generate vector embeddings for the chunks of text
-        ids =[str(uuid.uuid5(uuid.NAMESPACE_URL,f"{source_id}:{i}")) for i in range(len(chunks))]  # Create unique IDs for each chunk using UUID5 based on the source ID and chunk index
-        payloads = [{"source": source_id, "text": chunks[i]} for i in range (len(chunks))]  # Create payloads containing the source ID and corresponding text chunk
+        chunks = chunk_and_src.chunks
+        sources = chunk_and_src.sources
+
+        vecs = embed_texts(chunks)
+
+        ids = [str(uuid.uuid4()) for _ in chunks]
+
+        payloads = [
+            {
+                "source": sources[i],
+                "text": chunks[i]
+            }
+            for i in range(len(chunks))
+        ]  # Create payloads containing the source ID and corresponding text chunk
         ChromaVectorStore().upsert(ids,chunks,vecs, payloads)  # Upsert the embeddings and payloads into the Chroma vector store
         return RAGUpsertResult(ingested=len(chunks))  # Return the number of chunks ingested as part of the result
     
@@ -60,12 +80,6 @@ async def ingest_document(ctx: inngest.Context):
     print("Chunks ingested:", len(chunk_and_src.chunks))  # Log the number of chunks ingested
     return ingested.model_dump()  # Return the result of the ingestion process as a dictionary
     
-
-
-# @inngest_client.create_function(
-#     fn_id= "RAG: Query PDF",  # Unique identifier for the function
-#     trigger=inngest.TriggerEvent(event="rag/query_pdf_ai") 
-#  ) # Specifies the event that triggers this function
 
 @inngest_client.create_function(
     fn_id= "RAG: Query PDF",  # Unique identifier for the function
@@ -82,25 +96,62 @@ async def query_pdf_ai(ctx: inngest.Context):
     top_k = ctx.event.data.get("top_k", 5)  # Get the top_k parameter from the event data, defaulting to 5
     
     found = await ctx.step.run('embed-and-search', lambda: _search(question,top_k), output_type=RAGSearchResult)  # Run the embedding and searching step, passing the question and top_k parameters, and specifying the output type
-    context_block = "\n\n".join(f" -{c}" for c in found.contexts)  # Combine the found contexts into a single block of text
-    user_content = (
-        "Use the following retrieved contexts to answer the question. If you don't know the answer, say you don't know.\n\n"
-        f"Context: \n{context_block}\n\n"
-        f"Question: {question}\n\n"
-        "Answer concisely based on the provided contexts."  # Create the prompt for the LLM
-    )
+    context_block = "\n\n".join(
+    f"[Source: {found.sources[i]}]\n{found.contexts[i]}"
+    for i in range(len(found.contexts))
+    )  # Combine the found contexts into a single block of text
+    system_prompt = """
+        You are a University Academic Assistant.
 
-    
+        Answer ONLY using the provided context from university documents.
+
+        If the answer is not found in the context, respond exactly with:
+        "I could not find this in the university documents."
+
+        Always format answers using clean Markdown.
+
+        Formatting rules:
+        - Use headings (###) for sections
+        - Use numbered lists for learning outcomes or steps
+        - Use bullet points for explanations
+        - Leave blank lines between sections
+
+        Response format:
+
+        ### Answer
+        A short explanation answering the question.
+
+        ### Details
+        Structured information such as outcomes, steps, or definitions.
+
+        ### Sources
+        List the document names where the information was found.
+        """
+
+    prompt = f"""
+    {system_prompt}
+
+    --------------------------------
+    Context from University Documents:
+    {context_block}
+    --------------------------------
+
+    Student Question:
+    {question}
+
+    Write the answer now.
+    """
+
     answer = await ctx.step.run(
         "llm-answer",
-        lambda: OllamaAdapter().generate(user_content)
+        lambda: OllamaAdapter().generate(prompt),  # Call the OllamaAdapter to generate an answer based on the system prompt and the combined context
     )
     print("Query found contexts:", found.contexts)  # Log the contexts found during the search
     return {
-        "answer": answer.strip(),
-        "sources": found.sources,
-        "num_contexts": len(found.contexts)
-    }
+    "answer": answer.strip(),
+    "sources": list(set(found.sources)),
+    "num_contexts": len(found.contexts)
+  }
 
 inngest.fast_api.serve(app,inngest_client,[ingest_document,query_pdf_ai])  # Bridge Inngest with FastAPI, enabling serverless function execution
 
@@ -119,3 +170,7 @@ def health_check():
 #    "pdf_path": "D:\\OneDrive\\Documents\\IIT\\STAGE 02\\DSGP\\Domain AI\\MVP\\backend\\data\\docs\\Module CM2607 Advanced Mathematics for Data Science.pdf"
 #    }
 #  }
+
+
+
+# rouge , bleu testing, f1 score llm testing

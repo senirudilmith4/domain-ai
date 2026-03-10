@@ -1,12 +1,10 @@
 from llama_index.readers.file import PDFReader
 from llama_index.core.node_parser import SentenceSplitter
 import os # Import os for potential error check
-#from backend.utils.logger import get_logger
 from typing import List
 from pathlib import Path 
 
 
-# logger = get_logger(__name__)
 SCRIPT_DIR = Path(__file__).resolve().parent
 DOCS_PATH = SCRIPT_DIR.parent / "data" / "docs"  # Create a Path object for the documents directory
 
