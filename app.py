@@ -531,3 +531,6 @@ elif menu == "Course Recommender":
                         st.rerun()
         else:
             st.info("👈 Select your interests and click 'Generate' to see AI suggestions.")
+
+
+            # ghhhhhhhhh
