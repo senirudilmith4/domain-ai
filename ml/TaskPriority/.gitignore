@@ -1,0 +1,26 @@
+# Python Cache Files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+
+# macOS System Files
+.DS_Store
+.AppleDouble
+.LSOverride
+*.swp
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Model & Data (optional - uncomment if storing in repo)
+# saved_models/
+# outputs/
+# feedback/

@@ -1,0 +1,62 @@
+[
+  {
+    "task_name": "Research Methodology Review",
+    "priority_class": 1,
+    "priority_label": "Medium Priority",
+    "priority_display": "\ud83d\udfe1 Medium",
+    "confidence": "60.0%",
+    "urgency_score": 0.4667,
+    "weeks_left": 2,
+    "explanation": "Classified as MEDIUM priority. With 2 week(s) left and a 40% weighting, this task should be started soon to avoid it becoming high priority.",
+    "predicted_at": "2026-03-13 21:59:10",
+    "rank": 1
+  },
+  {
+    "task_name": "Data Structures Quiz",
+    "priority_class": 1,
+    "priority_label": "Medium Priority",
+    "priority_display": "\ud83d\udfe1 Medium",
+    "confidence": "100.0%",
+    "urgency_score": 0.1714,
+    "weeks_left": 6,
+    "explanation": "Classified as MEDIUM priority. With 6 week(s) left and a 20% weighting, this task should be started soon to avoid it becoming high priority.",
+    "predicted_at": "2026-03-13 21:59:10",
+    "rank": 2
+  },
+  {
+    "task_name": "Final Year Project Proposal",
+    "priority_class": 0,
+    "priority_label": "Low Priority",
+    "priority_display": "\ud83d\udfe2 Low",
+    "confidence": "100.0%",
+    "urgency_score": 1.0,
+    "weeks_left": 1,
+    "explanation": "Classified as LOW priority. 1 week(s) remain and the urgency score is low (1.00). Schedule time for this task but focus on higher-priority items first.",
+    "predicted_at": "2026-03-13 21:59:10",
+    "rank": 3
+  },
+  {
+    "task_name": "Statistics Coursework",
+    "priority_class": 0,
+    "priority_label": "Low Priority",
+    "priority_display": "\ud83d\udfe2 Low",
+    "confidence": "100.0%",
+    "urgency_score": 1.0,
+    "weeks_left": 0,
+    "explanation": "Classified as LOW priority. 0 week(s) remain and the urgency score is low (1.00). Schedule time for this task but focus on higher-priority items first.",
+    "predicted_at": "2026-03-13 21:59:10",
+    "rank": 4
+  },
+  {
+    "task_name": "Machine Learning Assignment 1",
+    "priority_class": 0,
+    "priority_label": "Low Priority",
+    "priority_display": "\ud83d\udfe2 Low",
+    "confidence": "80.0%",
+    "urgency_score": 0.32,
+    "weeks_left": 4,
+    "explanation": "Classified as LOW priority. 4 week(s) remain and the urgency score is low (0.32). Schedule time for this task but focus on higher-priority items first.",
+    "predicted_at": "2026-03-13 21:59:10",
+    "rank": 5
+  }
+]
