@@ -1,8 +1,16 @@
+from unittest import result
+
+from fastapi import Path, requests
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 import time
+import asyncio
+import os
+import inngest
+import requests 
+from dotenv import load_dotenv
 from datetime import date, datetime, timedelta
 import numpy as np
 import joblib
@@ -11,6 +19,9 @@ from typing import Dict, List, Tuple
 
 
 
+
+
+load_dotenv()
 # -----------------------------------------------------------------------------
 # 1. PAGE CONFIGURATION & DARK THEME CSS
 # -----------------------------------------------------------------------------
@@ -334,53 +345,70 @@ if menu == "Dashboard":
 # 8. MODULE: CHAT ASSISTANT
 # -----------------------------------------------------------------------------
 elif menu == "Chat Assistant":
-
+    
     col_chat, col_info = st.columns([3, 1])
 
+    # ---------------- RIGHT SIDE ----------------
     with col_info:
         st.markdown('<div class="css-card">', unsafe_allow_html=True)
         st.markdown("#### 💡 Quick Prompts")
+
         prompts = [
             "When is the proposal due?",
             "What is the policy on plagiarism?",
             "Draft an email to my supervisor.",
             "Summarize my workload."
         ]
+
         for p in prompts:
             if st.button(p, key=p, use_container_width=True):
                 st.session_state.messages.append({"role": "user", "content": p})
                 st.rerun()
+
         st.markdown('</div>', unsafe_allow_html=True)
+        st.info("Connected to University Knowledge Base")
 
-        st.info("System connected to University Knowledge Base (Mock)")
-
+    # ---------------- LEFT SIDE (CHAT UI) ----------------
     with col_chat:
-        for msg in st.session_state.messages:
-            with st.chat_message(msg["role"]):
-                st.markdown(msg["content"])
+        st.title("🎓 University AI Assistant")
+        st.caption("Ask questions about modules, learning outcomes, and academic information.")
 
-        if user_input := st.chat_input("Ask the Domain AI..."):
-            st.session_state.messages.append({"role": "user", "content": user_input})
+        prompt = st.chat_input("Ask your university question...")
+
+        if prompt:
+            st.session_state.messages.append({"role": "user", "content": prompt})
+
             with st.chat_message("user"):
-                st.markdown(user_input)
+                st.markdown(prompt)
 
             with st.chat_message("assistant"):
-                # Mock Logic
-                response = "I am analyzing the university database..."
-                if "due" in user_input or "deadline" in user_input:
-                    response = "Based on your Task Manager, the **Final Year Project Proposal** is your most critical deadline, due in 2 days. The system recommends dedicating 4 hours today."
-                elif "policy" in user_input:
-                    response = "According to the *Academic Integrity Policy 2025*, plagiarism is a Level 1 offense. Turnitin reports must be below 20% similarity."
 
-                # Stream Response
-                placeholder = st.empty()
-                full_resp = ""
-                for chunk in stream_text(response):
-                    full_resp += chunk
-                    placeholder.markdown(full_resp + "▌")
-                placeholder.markdown(full_resp)
-                st.session_state.messages.append({"role": "assistant", "content": full_resp})
+                message_placeholder = st.empty()
+                full_response = ""
 
+                # Streaming simulation (until backend streaming implemented)
+                from rag_client import send_rag_query_event, wait_for_run_output
+
+                event_id = asyncio.run(send_rag_query_event(prompt, 5))
+                output = wait_for_run_output(event_id)
+                answer = output.get("answer", "No answer found.")
+                sources = output.get("sources", [])
+
+                # Simulated streaming effect
+                for line in answer.split("\n"):
+                    full_response += line + "\n"
+                    message_placeholder.markdown(full_response + "▌")
+                    time.sleep(0.04)
+
+                message_placeholder.markdown(full_response)
+
+                if sources:
+                    with st.expander("📚 Sources"):
+                        for s in set(sources):
+                            st.markdown(f"📄 **{s}**")
+                            st.session_state.messages.append(
+                                {"role": "assistant", "content": answer}
+                            )
 # -----------------------------------------------------------------------------
 # 9. MODULE: TASK MANAGER
 # -----------------------------------------------------------------------------
