@@ -21,7 +21,7 @@ class ChromaVectorStore:
             Settings(
                 persist_directory=persist_directory,
                 anonymized_telemetry=False,
-                is_persistent=True
+                is_persistent=True 
             )
         )
 
@@ -32,6 +32,8 @@ class ChromaVectorStore:
             name=self.collection_name,
             metadata={"hnsw:space": "cosine"}
         )
+        
+        print("Existing collections:", self.client.list_collections())
 
     def upsert(self,ids, chunks, embeddings, metadatas):      # Take text chunks from a document and safely store or update them in ChromaDB
             self.collection.upsert(
@@ -42,7 +44,7 @@ class ChromaVectorStore:
             )
 
 
-    def similarity_search(self, query_embedding, top_k=5, where=None):   # Perform a similarity search in ChromaDB using the query embedding and return the most relevant docs
+    def similarity_search(self, query_embedding, top_k, where=None):   # Perform a similarity search in ChromaDB using the query embedding and return the most relevant docs
         results = self.collection.query(
             query_embeddings=[query_embedding],   # Embedding vector for the search query
             n_results=top_k,    # Return the top K most similar documents based on cosine similarity
@@ -65,6 +67,7 @@ class ChromaVectorStore:
                 else:
                     sources.append("Unknown")
 
+        
         return {
             "contexts": contexts,
             "sources": list(sources),
@@ -72,3 +75,32 @@ class ChromaVectorStore:
         }
 
         
+ChromaVectorStore()
+
+# client = chromadb.Client(
+#     Settings(
+#         persist_directory="data/chroma_db",
+#         anonymized_telemetry=False,
+#         is_persistent=True
+#     )
+# )
+
+# collection = client.get_or_create_collection(
+#     name="docs",
+#     metadata={"hnsw:space": "cosine"}
+# )
+
+# # Example ingestion
+# collection.upsert(
+#     ids=["doc1"],
+#     documents=["This is a test document."],
+#     metadatas=[{"source": "test"}],
+#     embeddings=[[0.1, 0.2, 0.3]]  # must match embedding dimension
+# )
+# # Now this will delete the persisted collection
+
+#print("Existing collections:", client.list_collections())  # Check existing collections after deletion
+# recreate collection
+# collection = client.create_collection(name="university_docs")
+
+# client.delete_collection(name="docs")

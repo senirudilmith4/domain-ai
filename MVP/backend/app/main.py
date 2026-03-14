@@ -15,6 +15,7 @@ from ingestion.load_docs import DOCS_PATH, load_and_chunk_pdf, embed_texts
 from chroma_db.vector_db import ChromaVectorStore
 from app.schemas.custom_types import RAGChunkAndSrc, RAGUpsertResult, RAGSearchResult, RAGQueryResult
 from app.OllamaAdapter import OllamaAdapter
+from app.schemas.meta_detec import detect_doc_type_and_metadata
 
 load_dotenv()  # Load environment variables from .env file
 
@@ -42,37 +43,27 @@ async def ingest_document(ctx: inngest.Context):
             raise ValueError(f"No PDF files found in {DOCS_PATH}")
         all_chunks = []
         sources = []
+        metadatas= []
 
         for pdf in pdf_files:
             chunks = load_and_chunk_pdf(str(pdf))
-            pdf_name = pdf.name
-
-            for c in chunks:
-                chunk_with_source = f"Module: {pdf_name}\n\n{c}"
-
-                all_chunks.append(chunk_with_source)
-                sources.append(pdf_name)
+            for i,c in enumerate(chunks,start=1):
+                all_chunks.append(c)
+                sources.append(pdf.name)
+                metadata = detect_doc_type_and_metadata(pdf, c, i)
+                metadatas.append(metadata)
 
         return RAGChunkAndSrc(
             chunks=all_chunks,
-            sources=sources
+            sources=sources,
+            metadatas=metadatas
 )
     def _upsert(chunk_and_src: RAGChunkAndSrc) -> RAGUpsertResult:
         chunks = chunk_and_src.chunks
-        sources = chunk_and_src.sources
-
         vecs = embed_texts(chunks)
-
         ids = [str(uuid.uuid4()) for _ in chunks]
-
-        payloads = [
-            {
-                "source": sources[i],
-                "text": chunks[i]
-            }
-            for i in range(len(chunks))
-        ]  # Create payloads containing the source ID and corresponding text chunk
-        ChromaVectorStore().upsert(ids,chunks,vecs, payloads)  # Upsert the embeddings and payloads into the Chroma vector store
+        metadatas = chunk_and_src.metadatas
+        ChromaVectorStore().upsert(ids,chunks,vecs, metadatas)  # Upsert the embeddings and metadatas into the Chroma vector store
         return RAGUpsertResult(ingested=len(chunks))  # Return the number of chunks ingested as part of the result
     
     chunk_and_src = await ctx.step.run("load-and-chunk", lambda:_load(ctx), output_type=RAGChunkAndSrc)  # Run the loading and chunking step, passing the context and specifying the output type
@@ -86,10 +77,18 @@ async def ingest_document(ctx: inngest.Context):
     trigger=inngest.TriggerEvent(event="rag/query_pdf_ai")  # Specifies the event that triggers this function
  )
 async def query_pdf_ai(ctx: inngest.Context):
+    
     def _search(question: str, top_k: int =5)-> RAGSearchResult:
-        query_vec = embed_texts([question])[0]  # Converts user question into a vector embedding
+        query_embedding = embed_texts([question])[0]  # Embed the question to get its vector representation for similarity search
         store = ChromaVectorStore()  # Creates connection to Vector DB
-        found = store.similarity_search(query_vec, top_k)  # Retrieves top_k most similar chunks
+        found = store.similarity_search(query_embedding, 10)  # Retrieves top_k most similar chunks
+        store = ChromaVectorStore()
+        results = store.similarity_search(query_embedding, 20)
+
+        for i in range(len(results["contexts"])):
+            print("SOURCE:", results["sources"][i])
+            print(results["contexts"][i][:200])
+            print("------")
         return RAGSearchResult(contexts=found['contexts'], sources=found['sources'])  # Wrap into structured result
     
     question = ctx.event.data["question"]  # Get the question from the event data
@@ -150,7 +149,9 @@ async def query_pdf_ai(ctx: inngest.Context):
     return {
     "answer": answer.strip(),
     "sources": list(set(found.sources)),
-    "num_contexts": len(found.contexts)
+    "num_contexts": len(found.contexts),
+    "Query found contexts:": found.contexts
+
   }
 
 inngest.fast_api.serve(app,inngest_client,[ingest_document,query_pdf_ai])  # Bridge Inngest with FastAPI, enabling serverless function execution
