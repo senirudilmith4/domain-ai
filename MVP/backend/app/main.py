@@ -92,7 +92,7 @@ async def query_pdf_ai(ctx: inngest.Context):
         return RAGSearchResult(contexts=found['contexts'], sources=found['sources'])  # Wrap into structured result
     
     question = ctx.event.data["question"]  # Get the question from the event data
-    top_k = ctx.event.data.get("top_k", 5)  # Get the top_k parameter from the event data, defaulting to 5
+    top_k = ctx.event.data.get("top_k", 10)  # Get the top_k parameter from the event data, defaulting to 5
     
     found = await ctx.step.run('embed-and-search', lambda: _search(question,top_k), output_type=RAGSearchResult)  # Run the embedding and searching step, passing the question and top_k parameters, and specifying the output type
     context_block = "\n\n".join(
@@ -175,3 +175,13 @@ def health_check():
 
 
 # rouge , bleu testing, f1 score llm testing
+
+# Traditional NLP Metrics
+    # BLEU,ROUGE-L,F1 Score
+
+# RAG-Specific Metrics
+    # Retrieval accuracy, Context relevance, Hallucination rate
+
+# Example statement in thesis:
+# The system was evaluated using BLEU, ROUGE-L, and F1 scores to measure textual similarity between generated responses and reference answers. 
+# Additionally, retrieval accuracy and hallucination tests were conducted to assess the effectiveness of the RAG pipeline.
