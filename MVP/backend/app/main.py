@@ -46,9 +46,11 @@ async def ingest_document(ctx: inngest.Context):
 
         for pdf in pdf_files:
             chunks = load_and_chunk_pdf(str(pdf))
+            sample_chunks = chunks[:3]  # Take only the first 3 chunks for metadata detection
+            base_metadata = detect_doc_type_and_metadata(str(pdf), sample_chunks, 1)  
             for i,c in enumerate(chunks,start=1):
                 all_chunks.append(c)
-                metadata = detect_doc_type_and_metadata(str(pdf), c, i)
+                metadata ={**base_metadata, "chunk": i}  # Add chunk index to metadata
                 metadatas.append(metadata)
 
         return RAGChunkAndSrc(
