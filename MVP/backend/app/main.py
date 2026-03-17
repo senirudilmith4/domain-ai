@@ -7,8 +7,8 @@ import uuid
 from fastapi import FastAPI, HTTPException, Header
 from inngest.experimental import ai  # Simplifies calling LLMs, managing retries, background AI execution
 from dotenv import load_dotenv
-from torch import chunk
-from pathlib import Path
+# from torch import chunk
+# from pathlib import Path
 
 # from app.api.routes.ask import router as ask_router
 from ingestion.load_docs import DOCS_PATH, load_and_chunk_pdf, embed_texts
@@ -37,28 +37,25 @@ app = FastAPI(                # creates a web server
     trigger=inngest.TriggerEvent(event="rag/inngest-document")  # Specifies the event that triggers this function
 )
 async def ingest_document(ctx: inngest.Context): 
-    def _load(ctx: inngest.Context) -> RAGChunkAndSrc:
+    def _load(ctx: inngest.Context) -> RAGChunkAndSrc: # Load and chunk the PDF document
         pdf_files = list(DOCS_PATH.glob("*.pdf"))  # List all PDF files in the documents directory
         if not pdf_files:
             raise ValueError(f"No PDF files found in {DOCS_PATH}")
         all_chunks = []
-        sources = []
         metadatas= []
 
         for pdf in pdf_files:
             chunks = load_and_chunk_pdf(str(pdf))
             for i,c in enumerate(chunks,start=1):
                 all_chunks.append(c)
-                sources.append(pdf.name)
-                metadata = detect_doc_type_and_metadata(pdf, c, i)
+                metadata = detect_doc_type_and_metadata(str(pdf), c, i)
                 metadatas.append(metadata)
 
         return RAGChunkAndSrc(
             chunks=all_chunks,
-            sources=sources,
-            metadatas=metadatas
-)
-    def _upsert(chunk_and_src: RAGChunkAndSrc) -> RAGUpsertResult:
+            metadatas=metadatas)
+    
+    def _upsert(chunk_and_src: RAGChunkAndSrc) -> RAGUpsertResult: # Embed the chunks and upsert them into the vector database
         chunks = chunk_and_src.chunks
         vecs = embed_texts(chunks)
         ids = [str(uuid.uuid4()) for _ in chunks]

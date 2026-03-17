@@ -2,6 +2,7 @@ import json
 from nltk.translate.bleu_score import sentence_bleu
 from rouge_score import rouge_scorer
 from sklearn.metrics import f1_score
+from nltk.translate.bleu_score import SmoothingFunction
 
 # Load evaluation data
 with open("D:\\OneDrive\\Documents\\IIT\\STAGE 02\\DSGP\\Domain AI\\MVP\\backend\\test_cases\\test.json") as f:
@@ -41,8 +42,8 @@ for ref, gen in zip(references, generated):
 
     ref = normalize(ref)
     gen = normalize(gen)
-
-    bleu = sentence_bleu([ref.split()], gen.split())
+    smooth = SmoothingFunction().method1
+    bleu = sentence_bleu([ref.split()], gen.split(), smoothing_function=smooth)
 
     # BLEU
     bleu_scores.append(bleu)
