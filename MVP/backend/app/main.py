@@ -7,11 +7,11 @@ import uuid
 from fastapi import FastAPI, HTTPException, Header
 from inngest.experimental import ai  # Simplifies calling LLMs, managing retries, background AI execution
 from dotenv import load_dotenv
-from torch import chunk
-from pathlib import Path
+# from torch import chunk
+# from pathlib import Path
 
 # from app.api.routes.ask import router as ask_router
-from ingestion.load_docs import DOCS_PATH, load_and_chunk_pdf, embed_texts
+from ingestion.load_docs import DOCS_PATH, load_pdf,chunk_texts, embed_texts
 from chroma_db.vector_db import ChromaVectorStore
 from app.schemas.custom_types import RAGChunkAndSrc, RAGUpsertResult, RAGSearchResult, RAGQueryResult
 from app.OllamaAdapter import OllamaAdapter
@@ -37,28 +37,28 @@ app = FastAPI(                # creates a web server
     trigger=inngest.TriggerEvent(event="rag/inngest-document")  # Specifies the event that triggers this function
 )
 async def ingest_document(ctx: inngest.Context): 
-    def _load(ctx: inngest.Context) -> RAGChunkAndSrc:
+    def _load(ctx: inngest.Context) -> RAGChunkAndSrc: # Load and chunk the PDF document
         pdf_files = list(DOCS_PATH.glob("*.pdf"))  # List all PDF files in the documents directory
         if not pdf_files:
             raise ValueError(f"No PDF files found in {DOCS_PATH}")
         all_chunks = []
-        sources = []
         metadatas= []
 
         for pdf in pdf_files:
-            chunks = load_and_chunk_pdf(str(pdf))
+            texts = load_pdf(str(pdf))  # Load the PDF and extract text
+            chunks = chunk_texts(texts)  # Chunk the extracted text into smaller pieces
+            sample_texts = " ".join(texts[:2])  # Take only the first 2 chunks for metadata detection
+            base_metadata = detect_doc_type_and_metadata(str(pdf), sample_texts)  # Extract metadata from the sample text
             for i,c in enumerate(chunks,start=1):
                 all_chunks.append(c)
-                sources.append(pdf.name)
-                metadata = detect_doc_type_and_metadata(pdf, c, i)
+                metadata ={**base_metadata, "chunk": i}  # Add chunk index to metadata
                 metadatas.append(metadata)
 
         return RAGChunkAndSrc(
             chunks=all_chunks,
-            sources=sources,
-            metadatas=metadatas
-)
-    def _upsert(chunk_and_src: RAGChunkAndSrc) -> RAGUpsertResult:
+            metadatas=metadatas)
+    
+    def _upsert(chunk_and_src: RAGChunkAndSrc) -> RAGUpsertResult: # Embed the chunks and upsert them into the vector database
         chunks = chunk_and_src.chunks
         vecs = embed_texts(chunks)
         ids = [str(uuid.uuid4()) for _ in chunks]
@@ -92,7 +92,7 @@ async def query_pdf_ai(ctx: inngest.Context):
         return RAGSearchResult(contexts=found['contexts'], sources=found['sources'])  # Wrap into structured result
     
     question = ctx.event.data["question"]  # Get the question from the event data
-    top_k = ctx.event.data.get("top_k", 5)  # Get the top_k parameter from the event data, defaulting to 5
+    top_k = ctx.event.data.get("top_k", 10)  # Get the top_k parameter from the event data, defaulting to 5
     
     found = await ctx.step.run('embed-and-search', lambda: _search(question,top_k), output_type=RAGSearchResult)  # Run the embedding and searching step, passing the question and top_k parameters, and specifying the output type
     context_block = "\n\n".join(
@@ -175,3 +175,13 @@ def health_check():
 
 
 # rouge , bleu testing, f1 score llm testing
+
+# Traditional NLP Metrics
+    # BLEU,ROUGE-L,F1 Score
+
+# RAG-Specific Metrics
+    # Retrieval accuracy, Context relevance, Hallucination rate
+
+# Example statement in thesis:
+# The system was evaluated using BLEU, ROUGE-L, and F1 scores to measure textual similarity between generated responses and reference answers. 
+# Additionally, retrieval accuracy and hallucination tests were conducted to assess the effectiveness of the RAG pipeline.
