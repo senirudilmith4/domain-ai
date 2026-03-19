@@ -21,12 +21,15 @@ def get_embed_model():
         _embed_model = SentenceTransformer(EMBED_MODEL)
     return _embed_model
 
-def load_and_chunk_pdf(path: str):
+def load_pdf(path: str):
     docs= PDFReader().load_data(file=path)
     texts = [d.text for d in docs if getattr(d, "text", None)]  # Ensure we only process nodes that have text content
-    chunks = []
+    return texts
+
+def chunk_texts(texts: List[str]) -> List[str]:
+    chunks = [] 
     for t in texts:
-        chunks.extend(splitter.split_text(t))
+        chunks.extend(splitter.split_text(t)) 
     return chunks
 
 def embed_texts(texts: list[str]) -> list[list[float]]:

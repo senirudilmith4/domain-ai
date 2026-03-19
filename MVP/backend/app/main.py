@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 # from pathlib import Path
 
 # from app.api.routes.ask import router as ask_router
-from ingestion.load_docs import DOCS_PATH, load_and_chunk_pdf, embed_texts
+from ingestion.load_docs import DOCS_PATH, load_pdf,chunk_texts, embed_texts
 from chroma_db.vector_db import ChromaVectorStore
 from app.schemas.custom_types import RAGChunkAndSrc, RAGUpsertResult, RAGSearchResult, RAGQueryResult
 from app.OllamaAdapter import OllamaAdapter
@@ -45,9 +45,10 @@ async def ingest_document(ctx: inngest.Context):
         metadatas= []
 
         for pdf in pdf_files:
-            chunks = load_and_chunk_pdf(str(pdf))
-            sample_chunks = chunks[:3]  # Take only the first 3 chunks for metadata detection
-            base_metadata = detect_doc_type_and_metadata(str(pdf), sample_chunks, 1)  
+            texts = load_pdf(str(pdf))  # Load the PDF and extract text
+            chunks = chunk_texts(texts)  # Chunk the extracted text into smaller pieces
+            sample_texts = " ".join(texts[:2])  # Take only the first 2 chunks for metadata detection
+            base_metadata = detect_doc_type_and_metadata(str(pdf), sample_texts)  # Extract metadata from the sample text
             for i,c in enumerate(chunks,start=1):
                 all_chunks.append(c)
                 metadata ={**base_metadata, "chunk": i}  # Add chunk index to metadata
