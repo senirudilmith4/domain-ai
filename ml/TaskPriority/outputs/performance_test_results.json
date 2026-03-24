@@ -1,0 +1,7 @@
+{
+  "single_prediction_avg_ms": 1.099,
+  "single_prediction_min_ms": 1.008,
+  "single_prediction_max_ms": 1.669,
+  "batch_prediction_ms": 53.87,
+  "batch_size": 2280
+}
