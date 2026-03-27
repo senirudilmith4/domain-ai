@@ -1,0 +1,12 @@
+Task Priority Prediction — Gradient Boosting
+Group 06 | Thushanth Mahendran (20241544)
+
+                 precision    recall  f1-score   support
+
+   Low Priority       0.98      0.99      0.98       684
+Medium Priority       0.97      0.96      0.97       684
+  High Priority       0.96      0.96      0.96       912
+
+       accuracy                           0.97      2280
+      macro avg       0.97      0.97      0.97      2280
+   weighted avg       0.97      0.97      0.97      2280
