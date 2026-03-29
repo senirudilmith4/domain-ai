@@ -38,7 +38,7 @@ async def ingest_document(ctx: inngest.Context):
  
     def _load() -> RAGChunkAndSrc:
         """Load every PDF in DOCS_PATH, chunk it, and collect metadata."""
-        pdf_files = list(DOCS_PATH.glob("*.pdf"))
+        pdf_files = list(DOCS_PATH.rglob("*.pdf"))
         if not pdf_files:
             raise ValueError(f"No PDF files found in {DOCS_PATH}")
  
