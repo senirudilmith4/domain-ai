@@ -998,8 +998,13 @@ elif menu == "Task Manager":
                     for err in errors:
                         st.error(err)
                 else:
-                    # CSV-based validation
-                    new_row = {
+                    new_data = pd.DataFrame([{
+                        "Task": t_name.strip(),
+                        "Module": t_mod.strip().upper(),
+                        "Deadline": t_date,
+                        "Priority": t_prio,
+                        "Status": "Not Started",
+                        "Progress": 0,
                         "Year": t_year,
                         "Semester": t_sem,
                         "Week_Released": t_week_released,
@@ -1017,39 +1022,10 @@ elif menu == "Task Manager":
                         "Task_Type_Project": task_type_project,
                         "Task_Type_Quiz": task_type_quiz,
                         "Task_Type_Report": task_type_report
-                    }
-                    valid, msg = is_valid_against_csv(new_row)
-                    if not valid:
-                        st.error(f"CSV Validation Failed: {msg}")
-                    else:
-                        new_data = pd.DataFrame([{
-                            "Task": t_name.strip(),
-                            "Module": t_mod.strip().upper(),
-                            "Deadline": t_date,
-                            "Priority": t_prio,
-                            "Status": "Not Started",
-                            "Progress": 0,
-                            "Year": t_year,
-                            "Semester": t_sem,
-                            "Week_Released": t_week_released,
-                            "Week_Deadline": t_week_deadline,
-                            "Current_Week": t_current_week,
-                            "Weeks_Left": t_weeks_left,
-                            "Weight": t_weight,
-                            "Difficulty": t_diff,
-                            "Estimated_Hours": t_hours,
-                            "Current_Workload": t_workload,
-                            "Procrastination_Score": t_procrast,
-                            "Avg_Delay_History": t_delay,
-                            "Urgency": t_urgency,
-                            "Task_Type_Exam": task_type_exam,
-                            "Task_Type_Project": task_type_project,
-                            "Task_Type_Quiz": task_type_quiz,
-                            "Task_Type_Report": task_type_report
-                        }])
-                        st.session_state.tasks_df = pd.concat([st.session_state.tasks_df, new_data], ignore_index=True)
-                        st.success("Task added successfully!")
-                        st.rerun()
+                    }])
+                    st.session_state.tasks_df = pd.concat([st.session_state.tasks_df, new_data], ignore_index=True)
+                    st.success("Task added successfully!")
+                    st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col_table:
@@ -1086,7 +1062,6 @@ elif menu == "Task Manager":
             }
         )
         st.session_state.tasks_df = edited_df
-
 # -----------------------------------------------------------------------------
 # 10. MODULE: COURSE RECOMMENDER
 # -----------------------------------------------------------------------------
