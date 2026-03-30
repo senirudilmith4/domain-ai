@@ -4,7 +4,7 @@ from contextlib import contextmanager
 
 class StudentDB:
     # Update the default path to match your file name
-    def __init__(self, db_path=r"D:\IIT Stuff\Group Project\DomainSpecifiedAIAssistant project\Project\domain-ai\ml\CourseRecModel\students.db"):
+    def __init__(self, db_path=r"D:\OneDrive\Documents\IIT\STAGE 02\DSGP\Domain AI\MVP\FrontEnd\students.db"):
         self.db_path = db_path
 
     @contextmanager
