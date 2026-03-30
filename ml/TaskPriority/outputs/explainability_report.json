@@ -1,0 +1,50 @@
+{
+  "model": "Gradient Boosting",
+  "top_features": [
+    {
+      "Feature": "Weight",
+      "Importance": 0.33524
+    },
+    {
+      "Feature": "Urgency",
+      "Importance": 0.23844
+    },
+    {
+      "Feature": "Current_Workload",
+      "Importance": 0.13058
+    },
+    {
+      "Feature": "Procrastination_Score",
+      "Importance": 0.05696
+    },
+    {
+      "Feature": "Avg_Delay_History",
+      "Importance": 0.05598
+    },
+    {
+      "Feature": "Weeks_Left",
+      "Importance": 0.04863
+    },
+    {
+      "Feature": "Estimated_Hours",
+      "Importance": 0.04788
+    },
+    {
+      "Feature": "Current_Week",
+      "Importance": 0.03141
+    },
+    {
+      "Feature": "Difficulty",
+      "Importance": 0.01915
+    },
+    {
+      "Feature": "Week_Released",
+      "Importance": 0.01437
+    }
+  ],
+  "decision_rule_summary": {
+    "High Priority": "Weeks_Left <= 2  AND  Weight >= 60  AND  Urgency >= 0.3",
+    "Medium Priority": "Weeks_Left between 3-6  OR  Urgency between 0.1-0.3",
+    "Low Priority": "Weeks_Left > 6  AND  Urgency < 0.1"
+  }
+}
