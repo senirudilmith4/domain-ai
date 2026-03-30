@@ -834,7 +834,6 @@ if menu == "Dashboard":
         st.plotly_chart(fig_vel, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-
 # -----------------------------------------------------------------------------
 # 8. MODULE: CHAT ASSISTANT
 # -----------------------------------------------------------------------------
