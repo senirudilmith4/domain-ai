@@ -390,7 +390,7 @@ def load_priority_model():
     """Loads and caches the priority ML model to prevent redundant loading."""
     try:
         import joblib
-        MODEL_PATH = "/Users/thushanthmahendran/Frontend/domain-ai/ml/TaskPriority/saved_models/best_model_pipeline.pkl"
+        MODEL_PATH = "D:\\OneDrive\\Documents\\IIT\\STAGE 02\\DSGP\\Domain AI\\ml\\TaskPriority\\saved_models\\best_model_pipeline.pkl"
         return joblib.load(MODEL_PATH)
     except Exception as e:
         st.error(f"Error loading Priority Model: {e}")
@@ -458,14 +458,17 @@ def ai_prioritize(df):
                 weeks_left = max(0, (deadline.date() - date.today()).days // 7)
                 weight = 50 
                 urgency = round(min((1.0 / (1.0 + weeks_left)) * (1 + weight / 100.0), 1.0), 6) if weeks_left > 0 else 1.0
-                
+                weight_value = row.get('Weight', weight)
+
+                if pd.isna(weight_value):
+                    weight_value = weight
                 task_name = str(row['Task']).lower()
                 task_type = str(row.get('TaskType', '')).lower()
                 
                 features = {
                     "Weeks_Left": weeks_left, "Week_Released": 1, "Week_Deadline": weeks_left + 1,
                     "Current_Week": 2, "Semester": 1, "Year": 1, 
-                    "Weight": int(row.get('Weight', weight)),
+                    "Weight": int(weight_value),
                     "Difficulty": float(row.get('Difficulty', 5.0)), 
                     "Estimated_Hours": int(row.get('EstHours', 8)), 
                     "Current_Workload": 6.0,
@@ -489,7 +492,13 @@ def ai_prioritize(df):
                 if pred_class == 2:
                     return "Critical" if urgency > 0.8 else "High"
                 return "Medium" if pred_class == 1 else "Low"
-                    
+            df = df.fillna({
+                        "Weight": 0,
+                        "Difficulty": 1,
+                        "Time_To_Deadline": 0
+                    })
+
+            df['Priority'] = df.apply(predict_priority, axis=1)        
             df['Priority'] = df.apply(predict_priority, axis=1)
             
     prio_map = {"Critical": 0, "High": 1, "Medium": 2, "Low": 3}
