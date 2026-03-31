@@ -30,19 +30,19 @@ st.markdown("""
 
     /* ── CSS Variables ──────────────────────────────────────────────── */
     :root {
-        --bg:        #000000;
-        --surface:   #0a0a0a;
-        --surface2:  #141414;
-        --border:    rgba(255,255,255,0.08);
-        --border-hi: rgba(0,210,180,0.3);
-        --accent:    #00d2b4;
-        --accent2:   #0071e3;
-        --accent3:   #f5a623;
-        --danger:    #ff3b30;
-        --text:      #f5f5f7;
-        --text-sub:  #86868b;
-        --text-dim:  #424245;
-        --glow:      0 0 40px rgba(0,210,180,0.1);
+        --bg:        #1e293b;
+        --surface:   #334155;
+        --surface2:  #475569;
+        --border:    rgba(255,255,255,0.15);
+        --border-hi: rgba(56,189,248,0.5);
+        --accent:    #38bdf8;
+        --accent2:   #c084fc;
+        --accent3:   #34d399;
+        --danger:    #fb7185;
+        --text:      #f8fafc;
+        --text-sub:  #cbd5e1;
+        --text-dim:  #94a3b8;
+        --glow:      0 0 40px rgba(192,132,252,0.25);
         --font:      'Figtree', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
         --mono:      'JetBrains Mono', 'SF Mono', monospace;
     }
@@ -67,15 +67,18 @@ st.markdown("""
 
     /* ── Sidebar ────────────────────────────────────────────────────── */
     section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #0a0a0a 0%, #050505 100%) !important;
+        background: linear-gradient(180deg, #334155 0%, #1e293b 100%) !important;
         border-right: 1px solid var(--border) !important;
-        box-shadow: 4px 0 40px rgba(0,0,0,0.6);
+        box-shadow: 4px 0 40px rgba(0,0,0,0.3);
     }
     section[data-testid="stSidebar"] > div {
         padding-top: 1.5rem;
     }
 
     /* Sidebar nav radio buttons */
+    /* Hide default circular radio */
+    .stRadio div[role="radiogroup"] > label > div:first-child { display: none !important; }
+    
     .stRadio > div {
         gap: 4px;
     }
@@ -91,24 +94,24 @@ st.markdown("""
         cursor: pointer !important;
     }
     .stRadio label:hover {
-        background: rgba(0,210,180,0.07) !important;
-        border-color: rgba(0,210,180,0.2) !important;
+        background: rgba(192,132,252,0.1) !important;
+        border-color: rgba(192,132,252,0.2) !important;
         color: var(--text) !important;
     }
     .stRadio label[data-checked="true"] {
-        background: rgba(0,210,180,0.1) !important;
+        background: rgba(56,189,248,0.15) !important;
         border-color: var(--border-hi) !important;
         color: var(--accent) !important;
     }
 
     /* ── Cards ──────────────────────────────────────────────────────── */
     .css-card {
-        background: linear-gradient(135deg, #141414 0%, #0a0a0a 100%);
+        background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
         border: 1px solid var(--border);
         border-radius: 16px;
         padding: 24px;
         margin-bottom: 20px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.08);
         transition: transform 0.25s cubic-bezier(.4,0,.2,1),
                     box-shadow 0.25s cubic-bezier(.4,0,.2,1),
                     border-color 0.25s ease;
@@ -120,13 +123,13 @@ st.markdown("""
         position: absolute;
         top: 0; left: 0; right: 0;
         height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(0,210,180,0.4), transparent);
+        background: linear-gradient(90deg, transparent, rgba(56,189,248,0.5), transparent);
         opacity: 0;
         transition: opacity 0.3s ease;
     }
     .css-card:hover {
         transform: translateY(-4px);
-        box-shadow: 0 20px 60px rgba(0,0,0,0.5), var(--glow);
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3), var(--glow);
         border-color: var(--border-hi);
     }
     .css-card:hover::before {
@@ -158,8 +161,8 @@ st.markdown("""
 
     /* ── Buttons ────────────────────────────────────────────────────── */
     div.stButton > button {
-        background: linear-gradient(135deg, #00d2b4 0%, #0099ff 100%) !important;
-        color: #07090f !important;
+        background: linear-gradient(135deg, #38bdf8 0%, #c084fc 100%) !important;
+        color: #f8fafc !important;
         border: none !important;
         border-radius: 10px !important;
         font-family: var(--font) !important;
@@ -168,12 +171,12 @@ st.markdown("""
         letter-spacing: 0.04em !important;
         padding: 0.55rem 1.4rem !important;
         transition: all 0.2s cubic-bezier(.4,0,.2,1) !important;
-        box-shadow: 0 4px 20px rgba(0,210,180,0.25) !important;
+        box-shadow: 0 4px 20px rgba(192,132,252,0.3) !important;
     }
     div.stButton > button:hover {
         transform: translateY(-2px) !important;
-        box-shadow: 0 8px 30px rgba(0,210,180,0.4) !important;
-        color: #07090f !important;
+        box-shadow: 0 8px 30px rgba(192,132,252,0.5) !important;
+        color: #ffffff !important;
     }
     div.stButton > button:active {
         transform: translateY(0) !important;
@@ -184,7 +187,7 @@ st.markdown("""
     .stNumberInput > div > div > input,
     .stSelectbox > div > div,
     .stDateInput > div > div > input {
-        background-color: #111827 !important;
+        background-color: var(--surface) !important;
         border: 1px solid var(--border) !important;
         border-radius: 10px !important;
         color: var(--text) !important;
@@ -194,7 +197,7 @@ st.markdown("""
     .stTextInput > div > div > input:focus,
     .stNumberInput > div > div > input:focus {
         border-color: var(--border-hi) !important;
-        box-shadow: 0 0 0 3px rgba(0,210,180,0.12) !important;
+        box-shadow: 0 0 0 3px rgba(56,189,248,0.2) !important;
     }
 
     /* Slider */
@@ -204,13 +207,13 @@ st.markdown("""
 
     /* ── Chat ───────────────────────────────────────────────────────── */
     .stChatMessage {
-        background: #111827 !important;
+        background: var(--surface) !important;
         border: 1px solid var(--border) !important;
         border-radius: 14px !important;
         padding: 1rem 1.2rem !important;
     }
     .stChatInputContainer {
-        background: #0d1117 !important;
+        background: var(--bg) !important;
         border: 1px solid var(--border) !important;
         border-radius: 14px !important;
     }
@@ -244,15 +247,15 @@ st.markdown("""
         letter-spacing: 0.06em;
         font-family: var(--mono);
     }
-    .badge-critical { background: rgba(239,68,68,0.15);  color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
-    .badge-high     { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
-    .badge-medium   { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
-    .badge-low      { background: rgba(0,210,180,0.12);  color: #00d2b4; border: 1px solid rgba(0,210,180,0.25); }
+    .badge-critical { background: rgba(251,113,133,0.15); color: #fb7185; border: 1px solid rgba(251,113,133,0.3); } /* Rose */
+    .badge-high     { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); } /* Amber */
+    .badge-medium   { background: rgba(192,132,252,0.15); color: #c084fc; border: 1px solid rgba(192,132,252,0.3); } /* Purple */
+    .badge-low      { background: rgba(52,211,153,0.15); color: #34d399; border: 1px solid rgba(52,211,153,0.3); } /* Emerald */
 
     /* ── Scrollbar ──────────────────────────────────────────────────── */
     ::-webkit-scrollbar       { width: 5px; height: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 999px; }
+    ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 999px; }
     ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
     /* ── Streamlit overrides ────────────────────────────────────────── */
@@ -260,20 +263,25 @@ st.markdown("""
         border-radius: 12px !important;
         border: 1px solid var(--border) !important;
     }
-    .stSuccess { background: rgba(0,210,180,0.08) !important; border-color: rgba(0,210,180,0.3) !important; }
-    .stWarning { background: rgba(245,158,11,0.08) !important; border-color: rgba(245,158,11,0.3) !important; }
-    .stError   { background: rgba(239,68,68,0.08)  !important; border-color: rgba(239,68,68,0.3)  !important; }
-    .stInfo    { background: rgba(59,130,246,0.08)  !important; border-color: rgba(59,130,246,0.3)  !important; }
+    .stSuccess { background: rgba(52,211,153,0.1) !important; border-color: rgba(52,211,153,0.3) !important; }
+    .stWarning { background: rgba(251,191,36,0.1) !important; border-color: rgba(251,191,36,0.3) !important; }
+    .stError   { background: rgba(251,113,133,0.1)  !important; border-color: rgba(251,113,133,0.3)  !important; }
+    .stInfo    { background: rgba(56,189,248,0.1)  !important; border-color: rgba(56,189,248,0.3)  !important; }
 
     /* ── Caption & small text ───────────────────────────────────────── */
     .stCaption, small, .stMarkdown p:has(small) {
         color: var(--text-sub) !important;
         font-size: 0.78rem !important;
     }
+    
+    .stMarkdown p, .stMarkdown li, div[data-testid="stMarkdownContainer"] {
+        color: var(--text) !important;
+        font-family: var(--font) !important;
+    }
 
     /* ── Form container ─────────────────────────────────────────────── */
     .stForm {
-        background: #0d1117 !important;
+        background: var(--surface) !important;
         border: 1px solid var(--border) !important;
         border-radius: 16px !important;
         padding: 1.2rem !important;
@@ -281,7 +289,7 @@ st.markdown("""
 
     /* ── Expander ───────────────────────────────────────────────────── */
     .streamlit-expanderHeader {
-        background: #111827 !important;
+        background: var(--surface) !important;
         border-radius: 10px !important;
         font-family: var(--font) !important;
         font-weight: 600 !important;
@@ -309,10 +317,10 @@ st.markdown("""
 
     /* ── Multiselect tags ───────────────────────────────────────────── */
     .stMultiSelect span[data-baseweb="tag"] {
-        background: rgba(0,210,180,0.15) !important;
-        border: 1px solid rgba(0,210,180,0.3) !important;
+        background: rgba(192,132,252,0.15) !important;
+        border: 1px solid rgba(192,132,252,0.3) !important;
         border-radius: 6px !important;
-        color: var(--accent) !important;
+        color: var(--accent2) !important;
     }
 
     /* ── Plotly chart bg ────────────────────────────────────────────── */
@@ -322,7 +330,7 @@ st.markdown("""
 
     /* ── Spinner ────────────────────────────────────────────────────── */
     .stSpinner > div {
-        border-top-color: var(--accent) !important;
+        border-top-color: var(--accent2) !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -505,29 +513,29 @@ if not st.session_state.login_state:
         st.markdown("<br><br><br>", unsafe_allow_html=True)
         st.markdown("""
         <div style="
-            background: linear-gradient(160deg, #0d1117 0%, #070b14 100%);
+            background: linear-gradient(160deg, #334155 0%, #1e293b 100%);
             padding: 48px 40px 36px;
             border-radius: 20px;
-            border: 1px solid rgba(0,210,180,0.15);
+            border: 1px solid rgba(56,189,248,0.15);
             text-align: center;
-            box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 60px rgba(0,210,180,0.05);
+            box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 60px rgba(56,189,248,0.05);
             position: relative;
             overflow: hidden;
         ">
             <div style="
                 position: absolute; top: 0; left: 0; right: 0; height: 2px;
-                background: linear-gradient(90deg, transparent, #00d2b4, #3b82f6, transparent);
+                background: linear-gradient(90deg, transparent, #38bdf8, #c084fc, transparent);
             "></div>
             <div style="
                 display: inline-flex; align-items: center; justify-content: center;
                 width: 64px; height: 64px; border-radius: 16px;
-                background: linear-gradient(135deg, rgba(0,210,180,0.15), rgba(59,130,246,0.15));
-                border: 1px solid rgba(0,210,180,0.2);
+                background: linear-gradient(135deg, rgba(56,189,248,0.15), rgba(192,132,252,0.15));
+                border: 1px solid rgba(56,189,248,0.2);
                 margin-bottom: 20px; font-size: 28px;
             ">🎓</div>
             <h2 style="
                 font-family: var(--font); font-weight: 800; font-size: 1.6rem;
-                background: linear-gradient(135deg, #00d2b4, #3b82f6);
+                background: linear-gradient(135deg, #38bdf8, #c084fc);
                 -webkit-background-clip: text; -webkit-text-fill-color: transparent;
                 margin: 0 0 8px;
             ">Domain Specific AI Platform</h2>
@@ -564,18 +572,18 @@ with st.sidebar:
         <div style="
             display: flex; align-items: center; gap: 10px;
             padding: 16px; border-radius: 14px;
-            background: linear-gradient(135deg, rgba(0,210,180,0.08), rgba(59,130,246,0.06));
-            border: 1px solid rgba(0,210,180,0.12);
+            background: linear-gradient(135deg, rgba(56,189,248,0.08), rgba(192,132,252,0.06));
+            border: 1px solid rgba(56,189,248,0.12);
             margin-bottom: 8px;
         ">
             <div style="
                 width: 36px; height: 36px; border-radius: 10px; font-size: 18px;
-                background: rgba(0,210,180,0.12); border: 1px solid rgba(0,210,180,0.2);
+                background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.2);
                 display: flex; align-items: center; justify-content: center; flex-shrink: 0;
             ">🎓</div>
             <div>
                 <div style="font-family: var(--font); font-weight: 700; font-size: 0.95rem; color: #f1f5f9; line-height: 1.2;">Domain Specific AI</div>
-                <div style="font-size: 0.65rem; letter-spacing: 0.14em; text-transform: uppercase; color: #00d2b4; font-weight: 600;">University Platform</div>
+                <div style="font-size: 0.65rem; letter-spacing: 0.14em; text-transform: uppercase; color: #38bdf8; font-weight: 600;">University Platform</div>
             </div>
         </div>
     </div>
@@ -588,7 +596,7 @@ with st.sidebar:
         border: 1px solid rgba(255,255,255,0.05);
         display: flex; align-items: center; gap: 10px;
     ">
-        <div style="width: 8px; height: 8px; border-radius: 50%; background: #00d2b4; box-shadow: 0 0 6px #00d2b4; flex-shrink:0;"></div>
+        <div style="width: 8px; height: 8px; border-radius: 50%; background: #38bdf8; box-shadow: 0 0 6px #38bdf8; flex-shrink:0;"></div>
         <div>
             <div style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: #475569; margin-bottom: 1px;">Current Role</div>
             <div style="font-family: var(--font); font-weight: 700; font-size: 0.9rem; color: #f1f5f9;">{st.session_state.user_role}</div>
@@ -620,7 +628,7 @@ st.markdown(f"""
     margin-bottom: 24px;
 ">
     <div>
-        <div style="font-size: 0.65rem; letter-spacing: 0.18em; text-transform: uppercase; color: #00d2b4; font-weight: 600; margin-bottom: 4px;">Smart University AI</div>
+        <div style="font-size: 0.65rem; letter-spacing: 0.18em; text-transform: uppercase; color: #38bdf8; font-weight: 600; margin-bottom: 4px;">Smart University AI</div>
         <h2 style="font-family: var(--font); font-weight: 800; font-size: 1.9rem; margin: 0; letter-spacing: -0.03em;">{menu}</h2>
         <p style="color: #475569; margin: 4px 0 0; font-size: 0.82rem;">
             Logged in as <span style="color: #64748b; font-weight: 600;">{st.session_state.user_role}</span>
@@ -668,8 +676,8 @@ if menu == "Dashboard":
     # ── Row 1: 4 metric tiles ────────────────────────────────────────
     m1, m2, m3, m4 = st.columns(4)
 
-    risk_color = '#ff3b30' if risk_val > 80 else '#f5a623' if risk_val > 40 else '#00d2b4'
-    risk_grad  = 'linear-gradient(90deg,#ff3b30,#ff6b6b)' if risk_val > 80 else 'linear-gradient(90deg,#f5a623,#fbbf24)' if risk_val > 40 else 'linear-gradient(90deg,#00d2b4,#0071e3)'
+    risk_color = '#fb7185' if risk_val > 80 else '#fbbf24' if risk_val > 40 else '#38bdf8'
+    risk_grad  = 'linear-gradient(90deg,#fb7185,#f43f5e)' if risk_val > 80 else 'linear-gradient(90deg,#fbbf24,#f59e0b)' if risk_val > 40 else 'linear-gradient(90deg,#38bdf8,#0071e3)'
 
     with m1:
         st.markdown(f"""
@@ -683,7 +691,7 @@ if menu == "Dashboard":
         </div>""", unsafe_allow_html=True)
 
     with m2:
-        deadline_color = '#ff3b30' if days_left <= 2 else '#f5a623' if days_left <= 5 else '#f5f5f7'
+        deadline_color = '#fb7185' if days_left <= 2 else '#fbbf24' if days_left <= 5 else '#f5f5f7'
         st.markdown(f"""
         <div class="css-card" style="padding:20px 22px;">
             <div class="metric-label">Next Deadline</div>
@@ -703,9 +711,9 @@ if menu == "Dashboard":
         st.markdown(f"""
         <div class="css-card" style="padding:20px 22px;">
             <div class="metric-label">Overall Progress</div>
-            <div class="metric-value" style="color:#00d2b4; font-size:1.55rem; margin:6px 0 8px;">{completion_pct}%</div>
+            <div class="metric-value" style="color:#38bdf8; font-size:1.55rem; margin:6px 0 8px;">{completion_pct}%</div>
             <div style="height:3px; border-radius:999px; background:rgba(255,255,255,0.04); overflow:hidden;">
-                <div style="height:100%; width:{completion_pct}%; border-radius:999px; background:linear-gradient(90deg,#00d2b4,#0071e3);"></div>
+                <div style="height:100%; width:{completion_pct}%; border-radius:999px; background:linear-gradient(90deg,#38bdf8,#0071e3);"></div>
             </div>
             <div style="font-size:0.7rem; color:var(--text-dim); margin-top:6px; font-weight:500;">Sprint Completion</div>
         </div>""", unsafe_allow_html=True)
@@ -728,9 +736,9 @@ if menu == "Dashboard":
                 'bgcolor': "rgba(0,0,0,0)",
                 'borderwidth': 0,
                 'steps': [
-                    {'range': [0,  50], 'color': "rgba(0,210,180,0.05)"},
-                    {'range': [50, 80], 'color': "rgba(245,166,35,0.05)"},
-                    {'range': [80,100], 'color': "rgba(255,59,48,0.07)"}],
+                    {'range': [0,  50], 'color': "rgba(56,189,248,0.05)"},
+                    {'range': [50, 80], 'color': "rgba(251,191,36,0.05)"},
+                    {'range': [80,100], 'color': "rgba(251,113,133,0.07)"}],
             },
             number={'font': {'color': risk_color, 'family': 'Figtree', 'size': 28}, 'suffix': ''}
         ))
@@ -746,7 +754,7 @@ if menu == "Dashboard":
             labels=['Critical','High','Medium','Low'],
             values=[max(critical_n,0.01), max(high_n,0.01), max(medium_n,0.01), max(low_n,0.01)],
             hole=0.68,
-            marker=dict(colors=['#ff3b30','#f5a623','#0071e3','#00d2b4'],
+            marker=dict(colors=['#fb7185','#fbbf24','#c084fc','#38bdf8'],
                         line=dict(color='#000000', width=2)),
             textinfo='none',
             hovertemplate='<b>%{label}</b><br>%{value} tasks<extra></extra>'
@@ -764,7 +772,7 @@ if menu == "Dashboard":
         st.markdown("<div style='font-size:0.7rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-sub); font-weight:600; margin-bottom:12px;'>Task Urgency by Deadline</div>", unsafe_allow_html=True)
         plot_df = df[df['Status'] != 'Done'].sort_values('_urgency', ascending=False).head(6)
         if not plot_df.empty:
-            pcolor_map = {'Critical': '#ff3b30','High': '#f5a623','Medium': '#0071e3','Low': '#00d2b4'}
+            pcolor_map = {'Critical': '#fb7185','High': '#fbbf24','Medium': '#c084fc','Low': '#38bdf8'}
             bar_colors = [pcolor_map.get(p,'#86868b') for p in plot_df['Priority']]
             fig_bar = go.Figure(go.Bar(
                 x=plot_df['_urgency'],
@@ -796,7 +804,7 @@ if menu == "Dashboard":
     with r1:
         st.markdown('''<div class="css-card" style="padding:20px;">''', unsafe_allow_html=True)
         st.markdown("<div style='font-size:0.7rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-sub); font-weight:600; margin-bottom:14px;'>ML Priority Breakdown</div>", unsafe_allow_html=True)
-        for label, count, color in [("Critical", critical_n, "#ff3b30"), ("High", high_n, "#f5a623"), ("Medium", medium_n, "#0071e3"), ("Low", low_n, "#00d2b4")]:
+        for label, count, color in [("Critical", critical_n, "#ff3b30"), ("High", high_n, "#f5a623"), ("Medium", medium_n, "#0071e3"), ("Low", low_n, "#38bdf8")]:
             pct = int(count / len(df) * 100) if len(df) > 0 else 0
             st.markdown(f"""
             <div style="margin-bottom:12px;">
@@ -816,7 +824,7 @@ if menu == "Dashboard":
         chart_data = pd.DataFrame({"Day": ["Mon", "Tue", "Wed", "Thu", "Fri"],
                                     "Completed": [2, 1, 3, 0, 4], "Added": [1, 2, 1, 5, 2]})
         fig_vel = px.bar(chart_data, x="Day", y=["Completed", "Added"],
-                         barmode='group', color_discrete_sequence=["#00d2b4", "#0071e3"])
+                         barmode='group', color_discrete_sequence=["#38bdf8", "#0071e3"])
         fig_vel.update_layout(
             paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
             font={'color': "#86868b", 'family': "Figtree"},
@@ -1104,7 +1112,7 @@ elif menu == "Course Recommender":
             ]
 
             for r in recs:
-                match_color = "#00d2b4" if r['match'] >= 90 else "#3b82f6" if r['match'] >= 80 else "#f59e0b"
+                match_color = "#38bdf8" if r['match'] >= 90 else "#c084fc" if r['match'] >= 80 else "#f59e0b"
                 st.markdown(f"""
                 <div class="css-card" style="border-left: 3px solid {match_color};">
                     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 8px;">
