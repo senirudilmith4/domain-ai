@@ -18,18 +18,13 @@ from PHI_INT import GPAInterventionSystem
 # -----------------------------------------------------------------------------
 # 1. PAGE CONFIGURATION & DARK THEME CSS
 # -----------------------------------------------------------------------------
+# ✅ ONLY ONE st.set_page_config() call — must be first Streamlit command
 st.set_page_config(
     page_title="Domain Specific AI Platform",
     page_icon="🎓",
     layout="wide",
     initial_sidebar_state="expanded"
 )
-
-# COLOR PALETTE (Dark Mode)
-# Background: #0E1117 (Streamlit Dark)
-# Card BG: #1E1E1E
-# Accent: #00ADB5 (Cyber Cyan)
-# Text: #FAFAFA
 
 st.markdown("""
 <style>
@@ -332,6 +327,16 @@ st.markdown("""
     .stSpinner > div {
         border-top-color: var(--accent) !important;
     }
+
+    /* ── Course Recommender result box ──────────────────────────────── */
+    .result-box {
+        padding: 20px;
+        border-radius: 10px;
+        background-color: rgba(20, 20, 20, 0.9);
+        border-left: 5px solid #00d2b4;
+        box-shadow: 2px 2px 10px rgba(0,0,0,0.4);
+        margin-top: 20px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -342,25 +347,16 @@ if "login_state" not in st.session_state:
     st.session_state.login_state = False
 if "user_role" not in st.session_state:
     st.session_state.user_role = "Student"
-
-# ✅ Add this line here
 if "pending_prompt" not in st.session_state:
     st.session_state.pending_prompt = None
 
+# ✅ Single initialisation of messages — no duplicate block
 if "messages" not in st.session_state:
     st.session_state.messages = [
         {"role": "assistant",
          "content": "Welcome. I am your Domain Specific AI Assistant. I can help with University policies, Task Prioritization, and Course Recommendations."}
     ]
 
-# Initial Chat History
-if "messages" not in st.session_state:
-    st.session_state.messages = [
-        {"role": "assistant",
-         "content": "Welcome. I am your Domain Specific AI Assistant. I can help with University policies, Task Prioritization, and Course Recommendations."}
-    ]
-
-# Initial Tasks
 if "tasks_df" not in st.session_state:
     data = {
         "Task": ["Final Year Project Proposal", "Machine Learning Assignment 1", "Research Methodology Review",
@@ -392,8 +388,6 @@ def calculate_risk(df):
     """Simple algorithm to calculate workload risk."""
     pending = df[df['Status'] != 'Done']
     high_prio = len(pending[pending['Priority'].isin(['Critical', 'High'])])
-
-    # Simple risk logic
     if high_prio > 2:
         return 85, "High Risk"
     elif high_prio > 0:
@@ -406,7 +400,6 @@ def calculate_risk(df):
 def load_priority_model():
     """Loads and caches the priority ML model to prevent redundant loading."""
     try:
-        import joblib
         MODEL_PATH = "/Users/thushanthmahendran/Frontend/domain-ai/ml/TaskPriority/saved_models/best_model_pipeline.pkl"
         return joblib.load(MODEL_PATH)
     except Exception as e:
@@ -469,22 +462,23 @@ def ai_prioritize(df):
         model = load_priority_model()
         if model:
             def predict_priority(row: pd.Series) -> str:
-                if str(row['Status']) == 'Done': return "Low"
-                
+                if str(row['Status']) == 'Done':
+                    return "Low"
+
                 deadline = pd.to_datetime(row['Deadline'])
                 weeks_left = max(0, (deadline.date() - date.today()).days // 7)
-                weight = 50 
+                weight = 50
                 urgency = round(min((1.0 / (1.0 + weeks_left)) * (1 + weight / 100.0), 1.0), 6) if weeks_left > 0 else 1.0
-                
+
                 task_name = str(row['Task']).lower()
                 task_type = str(row.get('TaskType', '')).lower()
-                
+
                 features = {
                     "Weeks_Left": weeks_left, "Week_Released": 1, "Week_Deadline": weeks_left + 1,
-                    "Current_Week": 2, "Semester": 1, "Year": 1, 
+                    "Current_Week": 2, "Semester": 1, "Year": 1,
                     "Weight": int(row.get('Weight', weight)),
-                    "Difficulty": float(row.get('Difficulty', 5.0)), 
-                    "Estimated_Hours": int(row.get('EstHours', 8)), 
+                    "Difficulty": float(row.get('Difficulty', 5.0)),
+                    "Estimated_Hours": int(row.get('EstHours', 8)),
                     "Current_Workload": 6.0,
                     "Procrastination_Score": 0.5, "Avg_Delay_History": 0.3,
                     "Urgency": urgency,
@@ -493,29 +487,29 @@ def ai_prioritize(df):
                     "Task_Type_Quiz": 1 if 'quiz' in task_name or 'quiz' in task_type else 0,
                     "Task_Type_Report": 1 if 'review' in task_name or 'report' in task_name or 'report' in task_type else 0
                 }
-                
+
                 cols = ["Weeks_Left", "Week_Released", "Week_Deadline", "Current_Week",
                         "Semester", "Year", "Weight", "Difficulty", "Estimated_Hours",
                         "Current_Workload", "Procrastination_Score", "Avg_Delay_History",
                         "Urgency", "Task_Type_Exam", "Task_Type_Project",
                         "Task_Type_Quiz", "Task_Type_Report"]
-                
+
                 X_vec = pd.DataFrame([features])[cols]
                 pred_class = int(model.predict(X_vec)[0])
-                
+
                 if pred_class == 2:
                     return "Critical" if urgency > 0.8 else "High"
                 return "Medium" if pred_class == 1 else "Low"
-                    
+
             df['Priority'] = df.apply(predict_priority, axis=1)
-            
+
     prio_map = {"Critical": 0, "High": 1, "Medium": 2, "Low": 3}
     df['p_score'] = df['Priority'].map(prio_map)
     return df.sort_values(by=['p_score', 'Deadline']).drop(columns=['p_score'])
 
 
 # -----------------------------------------------------------------------------
-# 4. LOGIN SCREEN (Simulated)
+# 4. LOGIN SCREEN
 # -----------------------------------------------------------------------------
 if not st.session_state.login_state:
     col1, col2, col3 = st.columns([1, 1, 1])
@@ -544,7 +538,7 @@ if not st.session_state.login_state:
                 margin-bottom: 20px; font-size: 28px;
             ">🎓</div>
             <h2 style="
-                font-family: var(--font); font-weight: 800; font-size: 1.6rem;
+                font-family: 'Figtree', sans-serif; font-weight: 800; font-size: 1.6rem;
                 background: linear-gradient(135deg, #00d2b4, #3b82f6);
                 -webkit-background-clip: text; -webkit-text-fill-color: transparent;
                 margin: 0 0 8px;
@@ -557,13 +551,12 @@ if not st.session_state.login_state:
         </div>
         """, unsafe_allow_html=True)
 
-        # Only Student role is allowed for this app
         st.write("**User Role:** Student")
         st.session_state.user_role = "Student"
 
         password = st.text_input("Password", type="password", placeholder="Enter your password...")
 
-        if st.button("Authenticate", width='stretch'):
+        if st.button("Authenticate", use_container_width=True):
             if password == "Student123":
                 st.session_state.login_state = True
                 st.rerun()
@@ -592,7 +585,7 @@ with st.sidebar:
                 display: flex; align-items: center; justify-content: center; flex-shrink: 0;
             ">🎓</div>
             <div>
-                <div style="font-family: var(--font); font-weight: 700; font-size: 0.95rem; color: #f1f5f9; line-height: 1.2;">Domain Specific AI</div>
+                <div style="font-family: 'Figtree', sans-serif; font-weight: 700; font-size: 0.95rem; color: #f1f5f9; line-height: 1.2;">Domain Specific AI</div>
                 <div style="font-size: 0.65rem; letter-spacing: 0.14em; text-transform: uppercase; color: #00d2b4; font-weight: 600;">University Platform</div>
             </div>
         </div>
@@ -609,7 +602,7 @@ with st.sidebar:
         <div style="width: 8px; height: 8px; border-radius: 50%; background: #00d2b4; box-shadow: 0 0 6px #00d2b4; flex-shrink:0;"></div>
         <div>
             <div style="font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: #475569; margin-bottom: 1px;">Current Role</div>
-            <div style="font-family: var(--font); font-weight: 700; font-size: 0.9rem; color: #f1f5f9;">{st.session_state.user_role}</div>
+            <div style="font-family: 'Figtree', sans-serif; font-weight: 700; font-size: 0.9rem; color: #f1f5f9;">{st.session_state.user_role}</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -639,7 +632,7 @@ st.markdown(f"""
 ">
     <div>
         <div style="font-size: 0.65rem; letter-spacing: 0.18em; text-transform: uppercase; color: #00d2b4; font-weight: 600; margin-bottom: 4px;">Smart University AI</div>
-        <h2 style="font-family: var(--font); font-weight: 800; font-size: 1.9rem; margin: 0; letter-spacing: -0.03em;">{menu}</h2>
+        <h2 style="font-family: 'Figtree', sans-serif; font-weight: 800; font-size: 1.9rem; margin: 0; letter-spacing: -0.03em;">{menu}</h2>
         <p style="color: #475569; margin: 4px 0 0; font-size: 0.82rem;">
             Logged in as <span style="color: #64748b; font-weight: 600;">{st.session_state.user_role}</span>
             &nbsp;·&nbsp; Academic Year 2025/26
@@ -647,7 +640,7 @@ st.markdown(f"""
     </div>
     <div style="text-align: right;">
         <div style="
-            font-family: var(--mono); font-size: 0.75rem; color: #334155;
+            font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #334155;
             background: rgba(255,255,255,0.03); padding: 6px 12px;
             border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);
         ">{datetime.now().strftime("%a, %d %b %Y  %H:%M")}</div>
@@ -668,7 +661,6 @@ if menu == "Dashboard":
     days_left  = (next_due - date.today()).days if not pending_df.empty else 0
     completion_pct = int(len(done_df) / len(df) * 100) if len(df) > 0 else 0
 
-    # Compute per-task urgency scores for the priority breakdown
     def get_urgency(row):
         dl = pd.to_datetime(row['Deadline'])
         wl = max(0, (dl.date() - date.today()).days // 7)
@@ -676,7 +668,6 @@ if menu == "Dashboard":
 
     df['_urgency'] = df.apply(get_urgency, axis=1)
 
-    # Priority breakdown counts
     prio_counts = df['Priority'].value_counts()
     critical_n  = prio_counts.get('Critical', 0)
     high_n      = prio_counts.get('High', 0)
@@ -697,7 +688,7 @@ if menu == "Dashboard":
             <div style="height:3px; border-radius:999px; background:rgba(255,255,255,0.04); overflow:hidden;">
                 <div style="height:100%; width:{risk_val}%; border-radius:999px; background:{risk_grad};"></div>
             </div>
-            <div style="font-size:0.7rem; color:var(--text-dim); margin-top:6px; font-weight:500;">AI Prediction Model</div>
+            <div style="font-size:0.7rem; color:#424245; margin-top:6px; font-weight:500;">AI Prediction Model</div>
         </div>""", unsafe_allow_html=True)
 
     with m2:
@@ -706,15 +697,15 @@ if menu == "Dashboard":
         <div class="css-card" style="padding:20px 22px;">
             <div class="metric-label">Next Deadline</div>
             <div class="metric-value" style="color:{deadline_color}; font-size:1.55rem; margin:6px 0 4px;">{next_due.strftime('%d %b') if not pending_df.empty else '—'}</div>
-            <div style="font-size:0.75rem; color:var(--text-sub); margin-top:4px;">{f'{days_left}d remaining' if days_left >= 0 else 'Overdue'}</div>
+            <div style="font-size:0.75rem; color:#86868b; margin-top:4px;">{f'{days_left}d remaining' if days_left >= 0 else 'Overdue'}</div>
         </div>""", unsafe_allow_html=True)
 
     with m3:
         st.markdown(f"""
         <div class="css-card" style="padding:20px 22px;">
             <div class="metric-label">Pending Tasks</div>
-            <div class="metric-value" style="color:var(--text); font-size:1.55rem; margin:6px 0 4px;">{len(pending_df)}</div>
-            <div style="font-size:0.75rem; color:var(--text-sub); margin-top:4px;">{len(done_df)} completed · {len(df)} total</div>
+            <div class="metric-value" style="color:#f5f5f7; font-size:1.55rem; margin:6px 0 4px;">{len(pending_df)}</div>
+            <div style="font-size:0.75rem; color:#86868b; margin-top:4px;">{len(done_df)} completed · {len(df)} total</div>
         </div>""", unsafe_allow_html=True)
 
     with m4:
@@ -725,7 +716,7 @@ if menu == "Dashboard":
             <div style="height:3px; border-radius:999px; background:rgba(255,255,255,0.04); overflow:hidden;">
                 <div style="height:100%; width:{completion_pct}%; border-radius:999px; background:linear-gradient(90deg,#00d2b4,#0071e3);"></div>
             </div>
-            <div style="font-size:0.7rem; color:var(--text-dim); margin-top:6px; font-weight:500;">Sprint Completion</div>
+            <div style="font-size:0.7rem; color:#424245; margin-top:6px; font-weight:500;">Sprint Completion</div>
         </div>""", unsafe_allow_html=True)
 
     st.markdown("<div style='margin-top:8px;'></div>", unsafe_allow_html=True)
@@ -735,7 +726,7 @@ if menu == "Dashboard":
 
     with c1:
         st.markdown('<div class="css-card" style="padding:20px;">', unsafe_allow_html=True)
-        st.markdown("<div style='font-size:0.7rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-sub); font-weight:600; margin-bottom:2px;'>Stress Gauge</div>", unsafe_allow_html=True)
+        st.markdown("<div style='font-size:0.7rem; letter-spacing:0.1em; text-transform:uppercase; color:#86868b; font-weight:600; margin-bottom:2px;'>Stress Gauge</div>", unsafe_allow_html=True)
         fig_gauge = go.Figure(go.Indicator(
             mode="gauge+number",
             value=risk_val,
@@ -759,7 +750,7 @@ if menu == "Dashboard":
 
     with c2:
         st.markdown('<div class="css-card" style="padding:20px;">', unsafe_allow_html=True)
-        st.markdown("<div style='font-size:0.7rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-sub); font-weight:600; margin-bottom:2px;'>Priority Split</div>", unsafe_allow_html=True)
+        st.markdown("<div style='font-size:0.7rem; letter-spacing:0.1em; text-transform:uppercase; color:#86868b; font-weight:600; margin-bottom:2px;'>Priority Split</div>", unsafe_allow_html=True)
         fig_pie = go.Figure(go.Pie(
             labels=['Critical','High','Medium','Low'],
             values=[max(critical_n,0.01), max(high_n,0.01), max(medium_n,0.01), max(low_n,0.01)],
@@ -779,7 +770,7 @@ if menu == "Dashboard":
 
     with c3:
         st.markdown('<div class="css-card" style="padding:20px;">', unsafe_allow_html=True)
-        st.markdown("<div style='font-size:0.7rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-sub); font-weight:600; margin-bottom:12px;'>Task Urgency by Deadline</div>", unsafe_allow_html=True)
+        st.markdown("<div style='font-size:0.7rem; letter-spacing:0.1em; text-transform:uppercase; color:#86868b; font-weight:600; margin-bottom:12px;'>Task Urgency by Deadline</div>", unsafe_allow_html=True)
         plot_df = df[df['Status'] != 'Done'].sort_values('_urgency', ascending=False).head(6)
         if not plot_df.empty:
             pcolor_map = {'Critical': '#ff3b30','High': '#f5a623','Medium': '#0071e3','Low': '#00d2b4'}
@@ -804,7 +795,7 @@ if menu == "Dashboard":
             )
             st.plotly_chart(fig_bar, use_container_width=True)
         else:
-            st.markdown("<p style='color:var(--text-sub); font-size:0.85rem; padding:20px 0;'>All tasks completed 🎉</p>", unsafe_allow_html=True)
+            st.markdown("<p style='color:#86868b; font-size:0.85rem; padding:20px 0;'>All tasks completed 🎉</p>", unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ── Row 3: Priority breakdown legend + Task table preview ────────
@@ -813,14 +804,14 @@ if menu == "Dashboard":
 
     with r1:
         st.markdown('''<div class="css-card" style="padding:20px;">''', unsafe_allow_html=True)
-        st.markdown("<div style='font-size:0.7rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-sub); font-weight:600; margin-bottom:14px;'>ML Priority Breakdown</div>", unsafe_allow_html=True)
+        st.markdown("<div style='font-size:0.7rem; letter-spacing:0.1em; text-transform:uppercase; color:#86868b; font-weight:600; margin-bottom:14px;'>ML Priority Breakdown</div>", unsafe_allow_html=True)
         for label, count, color in [("Critical", critical_n, "#ff3b30"), ("High", high_n, "#f5a623"), ("Medium", medium_n, "#0071e3"), ("Low", low_n, "#00d2b4")]:
             pct = int(count / len(df) * 100) if len(df) > 0 else 0
             st.markdown(f"""
             <div style="margin-bottom:12px;">
                 <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
                     <span style="font-size:0.82rem; font-weight:600; color:{color};">{label}</span>
-                    <span style="font-family:var(--mono); font-size:0.75rem; color:var(--text-sub);">{count} · {pct}%</span>
+                    <span style="font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:#86868b;">{count} · {pct}%</span>
                 </div>
                 <div style="height:3px; border-radius:999px; background:rgba(255,255,255,0.04); overflow:hidden;">
                     <div style="height:100%; width:{pct}%; border-radius:999px; background:{color}; opacity:0.85;"></div>
@@ -830,7 +821,7 @@ if menu == "Dashboard":
 
     with r2:
         st.markdown('''<div class="css-card" style="padding:20px;">''', unsafe_allow_html=True)
-        st.markdown("<div style='font-size:0.7rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-sub); font-weight:600; margin-bottom:12px;'>Task Velocity This Week</div>", unsafe_allow_html=True)
+        st.markdown("<div style='font-size:0.7rem; letter-spacing:0.1em; text-transform:uppercase; color:#86868b; font-weight:600; margin-bottom:12px;'>Task Velocity This Week</div>", unsafe_allow_html=True)
         chart_data = pd.DataFrame({"Day": ["Mon", "Tue", "Wed", "Thu", "Fri"],
                                     "Completed": [2, 1, 3, 0, 4], "Added": [1, 2, 1, 5, 2]})
         fig_vel = px.bar(chart_data, x="Day", y=["Completed", "Added"],
@@ -865,7 +856,6 @@ elif menu == "Chat Assistant":
             )
             output = wait_for_run_output(event_id, timeout_s=120)
             return output.get("answer") or output.get("response") or str(output)
-
         except TimeoutError:
             return "⚠️ The RAG pipeline timed out. Please try again."
         except requests.exceptions.ConnectionError:
@@ -873,7 +863,7 @@ elif menu == "Chat Assistant":
         except Exception as e:
             return f"⚠️ Error: {str(e)}"
 
-    def stream_text(text: str, delay: float = 0.015):
+    def stream_chat_text(text: str, delay: float = 0.015):
         """Simulate streaming by yielding characters."""
         for char in text:
             yield char
@@ -892,14 +882,13 @@ elif menu == "Chat Assistant":
 
             placeholder = st.empty()
             streamed = ""
-            for chunk in stream_text(full_resp):
+            for chunk in stream_chat_text(full_resp):
                 streamed += chunk
                 placeholder.markdown(streamed + "▌")
             placeholder.markdown(streamed)
 
             st.session_state.messages.append({"role": "assistant", "content": streamed})
 
-    # ─── Layout ───────────────────────────────────────────────
     col_chat, col_info = st.columns([3, 1])
 
     with col_info:
@@ -938,10 +927,9 @@ elif menu == "Chat Assistant":
 # -----------------------------------------------------------------------------
 elif menu == "Task Manager":
 
-    # Display current date/time in the task manager header as polished card
     now = datetime.now().strftime('%A, %d %B %Y  %I:%M:%S %p')
     st.markdown(
-        f"<div style='font-family: var(--mono); font-size: 0.78rem; color: #334155; background: rgba(255,255,255,0.02); padding: 8px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.04); display:inline-block; margin-bottom: 14px;'>🕒  {now}</div>",
+        f"<div style='font-family: \"JetBrains Mono\", monospace; font-size: 0.78rem; color: #334155; background: rgba(255,255,255,0.02); padding: 8px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.04); display:inline-block; margin-bottom: 14px;'>🕒  {now}</div>",
         unsafe_allow_html=True
     )
 
@@ -961,39 +949,37 @@ elif menu == "Task Manager":
         st.markdown("---")
         st.markdown("#### Add New Task")
         with st.form("new_task"):
-            # Academic year and semester
             col_ys, col_w = st.columns([2, 1])
             with col_ys:
-                t_year = st.selectbox("Academic Year", [1, 2, 3, 4], index=0, help="Year of study")
-                t_sem = st.selectbox("Semester", [1, 2], index=0, help="Semester number")
+                t_year = st.selectbox("Academic Year", [1, 2, 3, 4], index=0)
+                t_sem = st.selectbox("Semester", [1, 2], index=0)
             with col_w:
-                t_week_released = st.number_input("Week Released", min_value=1, max_value=52, value=1, step=1, help="Week when task is released")
-                t_week_deadline = st.number_input("Week Deadline", min_value=t_week_released, max_value=52, value=t_week_released+1, step=1, help="Week when task is due")
-                t_current_week = st.number_input("Current Week", min_value=t_week_released, max_value=52, value=t_week_released, step=1, help="Current week number")
-                t_weeks_left = max(0, t_week_deadline - t_current_week)
+                t_week_released = st.number_input("Week Released", min_value=1, max_value=52, value=1, step=1)
+                t_week_deadline = st.number_input("Week Deadline", min_value=t_week_released, max_value=52, value=t_week_released+1, step=1)
+                t_current_week  = st.number_input("Current Week", min_value=t_week_released, max_value=52, value=t_week_released, step=1)
+                t_weeks_left    = max(0, t_week_deadline - t_current_week)
 
-            t_name = st.text_input("Task Description", placeholder="e.g. Final sprint backlog cleanup", help="Short description of the task")
-            t_mod = st.text_input("Module Code", max_chars=10, help="E.g. ML201, PROJ400")
-            t_date = st.date_input("Due Date", min_value=date.today(), help="Task deadline date")
+            t_name = st.text_input("Task Description", placeholder="e.g. Final sprint backlog cleanup")
+            t_mod  = st.text_input("Module Code", max_chars=10)
+            t_date = st.date_input("Due Date", min_value=date.today())
             t_prio = st.selectbox("Priority", ["Critical", "High", "Medium", "Low"])
 
             col_a, col_b = st.columns(2)
             with col_a:
-                t_type = st.selectbox("Task Type", ["Project", "Exam", "Quiz", "Report", "Other"])
-                t_diff = st.slider("Estimated Difficulty", 1.0, 10.0, 5.0, 0.5, help="1=Very Easy, 10=Very Hard")
-                t_workload = st.slider("Current Workload (hrs)", 0.0, 20.0, 6.0, 0.5, help="Your current weekly workload")
-                t_procrast = st.slider("Procrastination Score", 0.0, 1.0, 0.5, 0.01, help="0=Never, 1=Always")
+                t_type     = st.selectbox("Task Type", ["Project", "Exam", "Quiz", "Report", "Other"])
+                t_diff     = st.slider("Estimated Difficulty", 1.0, 10.0, 5.0, 0.5)
+                t_workload = st.slider("Current Workload (hrs)", 0.0, 20.0, 6.0, 0.5)
+                t_procrast = st.slider("Procrastination Score", 0.0, 1.0, 0.5, 0.01)
             with col_b:
-                t_weight = st.slider("Weight (%)", 0, 100, 50, 1, help="Contribution to final grade")
-                t_hours = st.slider("Est. Hours Required", 1, 40, 8, 1, help="Estimated hours to complete")
-                t_delay = st.slider("Avg Delay History", 0.0, 1.0, 0.3, 0.01, help="Average delay in past tasks")
-                t_urgency = st.slider("Urgency", 0.0, 1.0, 0.1, 0.01, help="System-calculated or user estimate")
+                t_weight   = st.slider("Weight (%)", 0, 100, 50, 1)
+                t_hours    = st.slider("Est. Hours Required", 1, 40, 8, 1)
+                t_delay    = st.slider("Avg Delay History", 0.0, 1.0, 0.3, 0.01)
+                t_urgency  = st.slider("Urgency", 0.0, 1.0, 0.1, 0.01)
 
-            # Task type one-hot encoding
-            task_type_exam = int(t_type == "Exam")
+            task_type_exam    = int(t_type == "Exam")
             task_type_project = int(t_type == "Project")
-            task_type_quiz = int(t_type == "Quiz")
-            task_type_report = int(t_type == "Report")
+            task_type_quiz    = int(t_type == "Quiz")
+            task_type_report  = int(t_type == "Report")
 
             errors = []
             if st.form_submit_button("Add to Workflow"):
@@ -1019,34 +1005,24 @@ elif menu == "Task Manager":
                     errors.append("Avg Delay History must be between 0.0 and 1.0.")
                 if not (0.0 <= t_urgency <= 1.0):
                     errors.append("Urgency must be between 0.0 and 1.0.")
+
                 if errors:
                     for err in errors:
                         st.error(err)
                 else:
                     new_data = pd.DataFrame([{
-                        "Task": t_name.strip(),
-                        "Module": t_mod.strip().upper(),
-                        "Deadline": t_date,
-                        "Priority": t_prio,
-                        "Status": "Not Started",
-                        "Progress": 0,
-                        "Year": t_year,
-                        "Semester": t_sem,
-                        "Week_Released": t_week_released,
-                        "Week_Deadline": t_week_deadline,
-                        "Current_Week": t_current_week,
-                        "Weeks_Left": t_weeks_left,
-                        "Weight": t_weight,
-                        "Difficulty": t_diff,
-                        "Estimated_Hours": t_hours,
-                        "Current_Workload": t_workload,
-                        "Procrastination_Score": t_procrast,
-                        "Avg_Delay_History": t_delay,
+                        "Task": t_name.strip(), "Module": t_mod.strip().upper(),
+                        "Deadline": t_date, "Priority": t_prio,
+                        "Status": "Not Started", "Progress": 0,
+                        "Year": t_year, "Semester": t_sem,
+                        "Week_Released": t_week_released, "Week_Deadline": t_week_deadline,
+                        "Current_Week": t_current_week, "Weeks_Left": t_weeks_left,
+                        "Weight": t_weight, "Difficulty": t_diff,
+                        "Estimated_Hours": t_hours, "Current_Workload": t_workload,
+                        "Procrastination_Score": t_procrast, "Avg_Delay_History": t_delay,
                         "Urgency": t_urgency,
-                        "Task_Type_Exam": task_type_exam,
-                        "Task_Type_Project": task_type_project,
-                        "Task_Type_Quiz": task_type_quiz,
-                        "Task_Type_Report": task_type_report
+                        "Task_Type_Exam": task_type_exam, "Task_Type_Project": task_type_project,
+                        "Task_Type_Quiz": task_type_quiz, "Task_Type_Report": task_type_report
                     }])
                     st.session_state.tasks_df = pd.concat([st.session_state.tasks_df, new_data], ignore_index=True)
                     st.success("Task added successfully!")
@@ -1055,8 +1031,6 @@ elif menu == "Task Manager":
 
     with col_table:
         st.markdown("### 📋 Active Workload")
-
-        # Style the dataframe editor
         edited_df = st.data_editor(
             st.session_state.tasks_df,
             use_container_width=True,
@@ -1064,38 +1038,26 @@ elif menu == "Task Manager":
             height=600,
             column_config={
                 "Priority": st.column_config.SelectboxColumn(
-                    "Priority",
-                    options=["Critical", "High", "Medium", "Low"],
-                    width="small",
-                    required=True,
+                    "Priority", options=["Critical", "High", "Medium", "Low"],
+                    width="small", required=True,
                 ),
                 "Status": st.column_config.SelectboxColumn(
-                    "Status",
-                    options=["Not Started", "In Progress", "Done"],
-                    width="small",
+                    "Status", options=["Not Started", "In Progress", "Done"], width="small",
                 ),
                 "Progress": st.column_config.ProgressColumn(
-                    "Completion",
-                    min_value=0,
-                    max_value=100,
-                    format="%f%%",
+                    "Completion", min_value=0, max_value=100, format="%f%%",
                 ),
-                "Deadline": st.column_config.DateColumn(
-                    "Due Date",
-                    format="DD MMM YYYY",
-                )
+                "Deadline": st.column_config.DateColumn("Due Date", format="DD MMM YYYY"),
             }
         )
         st.session_state.tasks_df = edited_df
+
 # -----------------------------------------------------------------------------
 # 10. MODULE: GPA PREDICTOR
 # -----------------------------------------------------------------------------
 elif menu == "GPA Predictor":
 
-
-# ============================================================================
-# PART 1: MODEL LOADING
-# ============================================================================
+    # ✅ NO st.set_page_config() here — removed duplicate
 
     db = StudentDB(db_path=DB_PATH)
     MODEL_3YR_PATH = "3yrgpa_predictor_model.pkl"
@@ -1103,25 +1065,18 @@ elif menu == "GPA Predictor":
     DATA_PATH      = "final_dataset.csv"
 
     if not os.path.exists(MODEL_3YR_PATH) or not os.path.exists(MODEL_4YR_PATH):
-        st.error(f"Error: Required model files not found.")
+        st.error("Error: Required model files not found.")
         st.stop()
 
     try:
         model_3yr = joblib.load(MODEL_3YR_PATH)
         model_4yr = joblib.load(MODEL_4YR_PATH)
-
         full_data = pd.read_csv(DATA_PATH) if os.path.exists(DATA_PATH) else None
         if full_data is None:
             st.warning(f"Dataset '{DATA_PATH}' not found. Using default threshold.")
-
     except Exception as e:
         st.error(f"Error loading models: {e}")
         st.stop()
-
-
-    # ============================================================================
-    # PART 2: FEATURE DEFINITIONS
-    # ============================================================================
 
     features_3yr = [
         'Stage', 'hours_per_week', 'academic_stress', 'struggle_with_managing',
@@ -1150,21 +1105,15 @@ elif menu == "GPA Predictor":
         'Starting tasks too late'
     ]
 
-    grade_point_map = {'A': 4.0, 'B': 3.0, 'C': 2.0, 'D': 1.0, 'NOT_TAKEN': 0.0}
+    grade_point_map     = {'A': 4.0, 'B': 3.0, 'C': 2.0, 'D': 1.0, 'NOT_TAKEN': 0.0}
     grade_point_options = sorted(list(grade_point_map.keys()),
-                                key=lambda x: grade_point_map[x], reverse=True)
-
-
-    # ============================================================================
-    # PART 3: INPUT FUNCTION
-    # ============================================================================
+                                 key=lambda x: grade_point_map[x], reverse=True)
 
     def get_user_inputs(target_year, current_features):
         st.sidebar.header("📊 Personal & Skill Inputs")
-
         st.sidebar.selectbox("Current Academic Stage",
-                            [f'Stage {i}' for i in range(1, 5)],
-                            index=target_year - 1, disabled=True)
+                             [f'Stage {i}' for i in range(1, 5)],
+                             index=target_year - 1, disabled=True)
 
         st.sidebar.subheader("Study & Stress Factors")
         hours_mapping = {
@@ -1180,12 +1129,12 @@ elif menu == "GPA Predictor":
         struggle_mapping = {'Rarely': 1, 'Sometimes': 2, 'Often/Always': 3}
         struggle_with_managing = struggle_mapping[
             st.sidebar.selectbox("Struggle with managing academic tasks?",
-                                list(struggle_mapping.keys()), index=1)
+                                 list(struggle_mapping.keys()), index=1)
         ]
         deadline_mapping = {'Rarely/Never': 1, 'Sometimes': 2, 'Always': 3}
         start_assignments_closer_deadline = deadline_mapping[
             st.sidebar.selectbox("Start assignments closer to the deadline?",
-                                list(deadline_mapping.keys()), index=1)
+                                 list(deadline_mapping.keys()), index=1)
         ]
 
         st.sidebar.subheader("Skill Levels (1=Novice, 5=Expert)")
@@ -1207,7 +1156,7 @@ elif menu == "GPA Predictor":
             year3_gpa = st.sidebar.number_input("Year 3 GPA (if available)",
                                                 min_value=0.0, max_value=4.0, step=0.01, value=0.0)
 
-        st.header(f"🎓 Course Grades (Previous Stages)")
+        st.header("🎓 Course Grades (Previous Stages)")
         st.markdown("Enter final grades for courses up to the target stage.")
 
         grade_cols = [col for col in current_features if col.startswith('Grade_CM')]
@@ -1216,50 +1165,33 @@ elif menu == "GPA Predictor":
         for i, col in enumerate(grade_cols):
             course_name   = col.replace('Grade_', '')
             default_grade = ('A' if 'CM16' in course_name
-                            else 'B' if 'CM26' in course_name
-                            else 'C' if 'CM36' in course_name
-                            else 'NOT_TAKEN')
+                             else 'B' if 'CM26' in course_name
+                             else 'C' if 'CM36' in course_name
+                             else 'NOT_TAKEN')
             with cols[i % 3]:
                 selected_grade    = st.selectbox(f"{course_name} Grade:",
-                                                grade_point_options,
-                                                index=grade_point_options.index(default_grade),
-                                                key=col)
+                                                 grade_point_options,
+                                                 index=grade_point_options.index(default_grade),
+                                                 key=col)
                 grade_inputs[col] = grade_point_map[selected_grade]
 
         user_data = {
-            'Stage':                                   target_year,
-            'hours_per_week':                          hours_per_week,
-            'academic_stress':                         academic_stress,
-            'struggle_with_managing':                  struggle_with_managing,
-            'start_assignments_closer_deadline':       start_assignments_closer_deadline,
-            'Skill_Programming':                       skill_programming,
-            'Skill_Math':                              skill_math,
-            'Skill_Technical_Comm':                    skill_tech_comm,
-            'Skill_Web_Development':                   skill_web_dev,
-            'Balancing multiple courses or projects':  1 if challenge_balance  else 0,
-            'Not knowing how to prioritize task':      1 if challenge_priority else 0,
-            'Starting tasks too late':                 1 if challenge_starting else 0,
-            'Year1_GPA':                               year1_gpa,
-            'Year2_GPA':                               year2_gpa,
-            'Year3_GPA':                               year3_gpa,
+            'Stage': target_year, 'hours_per_week': hours_per_week,
+            'academic_stress': academic_stress,
+            'struggle_with_managing': struggle_with_managing,
+            'start_assignments_closer_deadline': start_assignments_closer_deadline,
+            'Skill_Programming': skill_programming, 'Skill_Math': skill_math,
+            'Skill_Technical_Comm': skill_tech_comm, 'Skill_Web_Development': skill_web_dev,
+            'Balancing multiple courses or projects': 1 if challenge_balance  else 0,
+            'Not knowing how to prioritize task':     1 if challenge_priority else 0,
+            'Starting tasks too late':                1 if challenge_starting else 0,
+            'Year1_GPA': year1_gpa, 'Year2_GPA': year2_gpa, 'Year3_GPA': year3_gpa,
             **grade_inputs
         }
 
         final_data = {key: user_data[key] for key in current_features}
         input_df   = pd.DataFrame([final_data], columns=current_features)
         return input_df, user_data
-
-
-    # ============================================================================
-    # PART 4: STREAMLIT UI
-    # ============================================================================
-
-    st.set_page_config(
-        page_title="GPA Prediction with AI Advisor",
-        layout="wide",
-        initial_sidebar_state="expanded",
-        page_icon="🎓"
-    )
 
     st.markdown("Get your GPA prediction **PLUS** personalized improvement strategies powered by ML")
 
@@ -1279,7 +1211,6 @@ elif menu == "GPA Predictor":
         current_features = features_4yr
         st.warning("⚠️ Input all grades up to Stage 3 (CM36xx). Stage 4 courses should be 'NOT_TAKEN'.")
 
-    # ── Instantiate PHI system (imported from phi_intervention.py) ─────────────
     intervention_system = GPAInterventionSystem(current_model, full_data, target_year, db=db)
 
     st.markdown("---")
@@ -1287,25 +1218,20 @@ elif menu == "GPA Predictor":
 
     if st.button("✨ Predict My GPA & Get Personalized Advice", type="primary", use_container_width=True):
         with st.spinner("Analysing your profile and generating recommendations..."):
-
-            # ── Predict ───────────────────────────────────────────────────────
             predicted_gpa = intervention_system.predict_gpa(input_df)
             db.save_prediction({"target_year": target_year,
                                 "predicted_gpa": predicted_gpa,
                                 "user_data": user_data_dict})
 
-            # ── Generate PHI recommendations ──────────────────────────────────
             current_gpa, phi_interventions = intervention_system.generate_interventions(
                 user_data_dict, top_k=5
             )
 
-            # ── SECTION 1: GPA Result ─────────────────────────────────────────
             st.markdown("## Your GPA Prediction")
             col1, col2, col3 = st.columns([2, 1, 1])
 
             with col1:
-                st.metric(label=f"Predicted Year {target_year} GPA",
-                        value=f"{predicted_gpa:.3f}")
+                st.metric(label=f"Predicted Year {target_year} GPA", value=f"{predicted_gpa:.3f}")
             with col2:
                 if predicted_gpa >= intervention_system.gpa_threshold:
                     st.success("✅ On Track")
@@ -1333,7 +1259,6 @@ elif menu == "GPA Predictor":
 
             st.markdown("---")
 
-            # ── SECTION 2: PHI Intervention Cards ────────────────────────────
             if phi_interventions:
                 st.markdown("## Your Personalized Improvement Plan")
                 st.markdown(f"**Found {len(phi_interventions)} scientifically-proven intervention(s)**")
@@ -1341,8 +1266,8 @@ elif menu == "GPA Predictor":
                 for idx, intervention in enumerate(phi_interventions, 1):
                     fpp = intervention['fpp_score']
                     effectiveness = ("🟢 Very High Impact" if fpp >= 2.0
-                                    else "🔵 High Impact"   if fpp >= 1.5
-                                    else "🟡 Moderate Impact")
+                                     else "🔵 High Impact"   if fpp >= 1.5
+                                     else "🟡 Moderate Impact")
 
                     with st.expander(
                         f"**#{idx}: {intervention['icon']} {intervention['name']}** {effectiveness}",
@@ -1359,8 +1284,8 @@ elif menu == "GPA Predictor":
                             )
                         with col_b:
                             st.metric(label="Expected GPA Increase",
-                                    value=f"+{intervention['gpa_improvement']:.3f}",
-                                    delta=f"{intervention['modified_gpa']:.3f} (new GPA)")
+                                      value=f"+{intervention['gpa_improvement']:.3f}",
+                                      delta=f"{intervention['modified_gpa']:.3f} (new GPA)")
                             st.markdown(f"**Domain:** {intervention['domain'].replace('_', ' ').title()}")
                             st.markdown(f"**FPP Score:** {fpp:.2f}")
             else:
@@ -1369,45 +1294,42 @@ elif menu == "GPA Predictor":
                 if predicted_gpa < intervention_system.gpa_threshold:
                     st.info("Focus on maintaining current good habits!")
 
-            # ── SECTION 3: Raw Input Table ────────────────────────────────────
             st.markdown("### Input Data")
             st.dataframe(input_df.T, use_container_width=True)
 
-            # ── SECTION 4: Export ─────────────────────────────────────────────
             st.markdown("---")
             st.markdown("### 💾 Export Your Results")
             col_e1, col_e2 = st.columns(2)
 
             with col_e1:
                 summary_df = pd.DataFrame({
-                    "Predicted GPA":            [f"{predicted_gpa:.3f}"],
-                    "Risk Level":               ["On Track" if predicted_gpa >= intervention_system.gpa_threshold else "Needs Attention"],
-                    "Number of Recommendations":[len(phi_interventions)],
-                    "Top Intervention":         [phi_interventions[0]['name'] if phi_interventions else "None needed"],
-                    "Expected Improvement":     [f"+{phi_interventions[0]['gpa_improvement']:.3f}" if phi_interventions else "N/A"],
-                    "Analysis Date":            [datetime.now().strftime("%Y-%m-%d %H:%M")]
+                    "Predicted GPA":             [f"{predicted_gpa:.3f}"],
+                    "Risk Level":                ["On Track" if predicted_gpa >= intervention_system.gpa_threshold else "Needs Attention"],
+                    "Number of Recommendations": [len(phi_interventions)],
+                    "Top Intervention":          [phi_interventions[0]['name'] if phi_interventions else "None needed"],
+                    "Expected Improvement":      [f"+{phi_interventions[0]['gpa_improvement']:.3f}" if phi_interventions else "N/A"],
+                    "Analysis Date":             [datetime.now().strftime("%Y-%m-%d %H:%M")]
                 })
                 st.download_button("📄 Download Summary (CSV)",
-                                summary_df.to_csv(index=False),
-                                file_name=f"gpa_summary_{datetime.now().strftime('%Y%m%d')}.csv",
-                                mime="text/csv")
+                                   summary_df.to_csv(index=False),
+                                   file_name=f"gpa_summary_{datetime.now().strftime('%Y%m%d')}.csv",
+                                   mime="text/csv")
 
             with col_e2:
                 if phi_interventions:
                     interventions_df = pd.DataFrame({
                         "Priority":        [i + 1 for i in range(len(phi_interventions))],
-                        "Intervention":    [i['name']            for i in phi_interventions],
-                        "Domain":          [i['domain']           for i in phi_interventions],
+                        "Intervention":    [i['name']               for i in phi_interventions],
+                        "Domain":          [i['domain']             for i in phi_interventions],
                         "FPP Score":       [f"{i['fpp_score']:.2f}" for i in phi_interventions],
                         "GPA Improvement": [f"+{i['gpa_improvement']:.3f}" for i in phi_interventions],
-                        "Description":     [i['description']      for i in phi_interventions]
+                        "Description":     [i['description']        for i in phi_interventions]
                     })
                     st.download_button("📋 Download Full Plan (CSV)",
-                                    interventions_df.to_csv(index=False),
-                                    file_name=f"improvement_plan_{datetime.now().strftime('%Y%m%d')}.csv",
-                                    mime="text/csv")
+                                       interventions_df.to_csv(index=False),
+                                       file_name=f"improvement_plan_{datetime.now().strftime('%Y%m%d')}.csv",
+                                       mime="text/csv")
 
-    # Footer
     st.markdown("---")
     st.markdown(
         "<div style='text-align: center; color: #666;'>"
@@ -1417,47 +1339,22 @@ elif menu == "GPA Predictor":
     )
 
 # -----------------------------------------------------------------------------
-# 10. MODULE: Course Recommender
+# 11. MODULE: COURSE RECOMMENDER
 # -----------------------------------------------------------------------------
 elif menu == "Course Recommender":
 
-    st.set_page_config(page_title="Course Recommender AI", page_icon="🎓", layout="centered")
-    if st.button("Generate AI Recommendations", use_container_width=True):
-        if not interests:
-            st.warning("Please select at least one academic interest to generate recommendations.")
-        else:
-          st.session_state.show_recs = True
-      
-   
+    # ✅ NO st.set_page_config() here — removed duplicate
+    # ✅ NO duplicate <style> block here — global CSS at top covers everything
 
-    # --- CUSTOM CSS ---
-    st.markdown("""
-        <style>
-        .main { background-color: #f5f7f9; }
-        .stButton>button { 
-            width: 100%; border-radius: 5px; height: 3em; 
-            background-color: #007bff; color: white; font-weight: bold;
-        }
-        .result-box { 
-            padding: 20px; border-radius: 10px; background-color: white; 
-            border-left: 5px solid #28a745; box-shadow: 2px 2px 10px rgba(0,0,0,0.1); 
-            margin-top: 20px;
-        }
-        </style>
-        """, unsafe_allow_html=True)
+    st.write("Personalized elective suggestions for Stage 3 and Stage 4 students.")
 
-    # --- LOAD MODELS ---
     @st.cache_resource
     def load_assets():
         try:
-            # Load both KNN models
-            knn3 = joblib.load('Stage3_elective_recommender_knn.pkl')
-            knn4 = joblib.load('Stage4_elective_recommender_knn.pkl')
-            
-            # Load the separate scalers (ensure you have saved a specific scaler for Stage 4)
-            scaler3 = joblib.load('gpa_scaler.pkl') # Assuming this is for Stage 3
-            scaler4 = joblib.load('gpa_scaler4.pkl') # You need a scaler trained on 4 features
-            
+            knn3    = joblib.load('Stage3_elective_recommender_knn.pkl')
+            knn4    = joblib.load('Stage4_elective_recommender_knn.pkl')
+            scaler3 = joblib.load('gpa_scaler.pkl')
+            scaler4 = joblib.load('gpa_scaler4.pkl')
             dataset = pd.read_csv('final_dataset.csv')
             return knn3, knn4, scaler3, scaler4, dataset
         except Exception as e:
@@ -1466,76 +1363,59 @@ elif menu == "Course Recommender":
 
     knn3, knn4, scaler3, scaler4, df = load_assets()
 
-    # --- HEADER ---
-    st.write("Personalized elective suggestions for Stage 3 and Stage 4 students.")
+    st.subheader("Student Academic Profile")
+    selected_stage = st.selectbox("Current Academic Stage", options=[3, 4], index=0)
+
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        y1_gpa = st.number_input("Year 1 GPA", 0.0, 4.0, 3.0, 0.01)
+    with col2:
+        y2_gpa = st.number_input("Year 2 GPA", 0.0, 4.0, 3.0, 0.01)
+
+    y3_gpa = 0.0
+    if selected_stage == 4:
+        with col3:
+            y3_gpa = st.number_input("Year 3 GPA", 0.0, 4.0, 3.0, 0.01)
 
     if knn3 is not None and knn4 is not None:
-        # --- INPUT SECTION ---
-        st.subheader("Student Academic Profile")
-        
-        selected_stage = st.selectbox("Current Academic Stage", options=[3, 4], index=0)
-        
-        # Dynamic GPA Inputs
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            y1_gpa = st.number_input("Year 1 GPA", 0.0, 4.0, 3.0, 0.01)
-        with col2:
-            y2_gpa = st.number_input("Year 2 GPA", 0.0, 4.0, 3.0, 0.01)
-        
-        # Year 3 GPA only shows if Stage 4 is selected
-        y3_gpa = 0.0
-        if selected_stage == 4:
-            with col3:
-                y3_gpa = st.number_input("Year 3 GPA", 0.0, 4.0, 3.0, 0.01)
-
-        # --- RECOMMENDATION LOGIC ---
         if st.button("Generate Recommendation"):
             with st.spinner('Analyzing peer patterns...'):
                 try:
                     if selected_stage == 3:
-                        # Stage 3 Logic: Uses [Stage, Y1, Y2]
-                        X_input = np.array([[3, y1_gpa, y2_gpa]])
+                        X_input  = np.array([[3, y1_gpa, y2_gpa]])
                         X_scaled = scaler3.transform(X_input)
                         distances, indices = knn3.kneighbors(X_scaled)
-                        
                         neighbors = df.iloc[indices[0]]
-                        avg_3602 = neighbors[neighbors['Grade_CM3602'] > 0]['Grade_CM3602'].mean()
-                        avg_3603 = neighbors[neighbors['Grade_CM3603'] > 0]['Grade_CM3603'].mean()
-                        
+                        avg_3602  = neighbors[neighbors['Grade_CM3602'] > 0]['Grade_CM3602'].mean()
+                        avg_3603  = neighbors[neighbors['Grade_CM3603'] > 0]['Grade_CM3603'].mean()
                         if (avg_3602 or 0) > (avg_3603 or 0):
                             rec_course, score = "CM3602: Internet of Things (IoT)", avg_3602
                         else:
                             rec_course, score = "CM3603: Edge Artificial Intelligence", avg_3603
-
                     else:
-                        # Stage 4 Logic: Uses [Stage, Y1, Y2, Y3]
-                        X_input = np.array([[4, y1_gpa, y2_gpa, y3_gpa]])
+                        X_input  = np.array([[4, y1_gpa, y2_gpa, y3_gpa]])
                         X_scaled = scaler4.transform(X_input)
                         distances, indices = knn4.kneighbors(X_scaled)
-                        
                         neighbors = df.iloc[indices[0]]
-                        avg_4606 = neighbors[neighbors['Grade_CM4606'] > 0]['Grade_CM4606'].mean()
-                        avg_4603 = neighbors[neighbors['Grade_CM4603'] > 0]['Grade_CM4603'].mean()
-                        
+                        avg_4606  = neighbors[neighbors['Grade_CM4606'] > 0]['Grade_CM4606'].mean()
+                        avg_4603  = neighbors[neighbors['Grade_CM4603'] > 0]['Grade_CM4603'].mean()
                         if (avg_4606 or 0) > (avg_4603 or 0):
                             rec_course, score = "CM4606: Machine Vision", avg_4606
                         else:
                             rec_course, score = "CM4603: Natural Language Processing", avg_4603
 
-                    # UI Result Display
                     st.markdown(f"""
                     <div class="result-box">
-                        <h3 style='color: #28a745;'>Top Pick: {rec_course}</h3>
-                        <p>Students with a similar GPA profile to yours performed best in this elective.</p>
+                        <h3 style='color: #00d2b4;'>Top Pick: {rec_course}</h3>
+                        <p style='color: #86868b;'>Students with a similar GPA profile to yours performed best in this elective.</p>
                     </div>
                     """, unsafe_allow_html=True)
-                    
+
                     st.metric(label="Predicted Success Score", value=f"{score:.2f} / 4.00")
                     st.progress(min(float(score / 4.0), 1.0) if not pd.isna(score) else 0.0)
 
                 except Exception as e:
                     st.error(f"Error during recommendation: {e}")
-
     else:
         st.warning("Ensure all model files and the dataset are present in the directory.")
 
