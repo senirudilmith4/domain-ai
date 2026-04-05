@@ -1,0 +1,37 @@
+[
+  {
+    "question": "What are the learning outcomes of Programming Fundamentals",
+    "reference": "The module CM1601 has learning outcomes including algorithmic problem solving, applying fundamental programming concepts, implementing object-oriented programs, and applying alternative code constructs."
+  },
+  {
+    "question": "What are the prerequisites for module CM1601?",
+    "reference": "No prerequisites are required for the module CM1601."
+  },
+  {
+    "question": "What is the assessment method for module CM1604?",
+    "reference": "100% of the assessment for CM1604 is based on a final examination."
+  },
+
+  {
+    "question": "What is the goal of learning module Data Structures and Algorithms ?",
+    "reference": "To understand the theory of algorithms and data structures, to evaluate their performance using complexity analysis theory and to apply algorithms and data structures to real-world problems."
+  },
+  
+  {
+    "question": "What is module CM1603?",
+    "reference": "Module CM1603 is a Database Systems module that aims to provide the fundamental principles, theory, and methods underpinning relational database management system (RDBMS) technologies."
+  },
+  {
+    "question": "What additional sources are listed for module database systems?",
+    "reference": "No additional sources have been listed for the module database systems."
+  },
+
+  {
+    "question": "What are the prerequisites for module Object-Oriented Development?",
+    "reference": "The module CM2601 requires completion of CM1601 or equivalent."
+  },
+  {
+    "question": "How many credits is the module Object-Oriented Development worth?",
+    "reference": "The module CM2601 offers 15 credits."
+  }
+]
