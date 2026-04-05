@@ -7,7 +7,10 @@ from datetime import date, datetime, timedelta
 import os
 import numpy as np
 import joblib
-from db_manager import StudentDB
+from db_manager import StudentDB, DB_PATH
+import requests
+import asyncio
+
 
 # ── Import the separated PHI class ────────────────────────────────────────
 from PHI_INT import GPAInterventionSystem
@@ -339,6 +342,16 @@ if "login_state" not in st.session_state:
     st.session_state.login_state = False
 if "user_role" not in st.session_state:
     st.session_state.user_role = "Student"
+
+# ✅ Add this line here
+if "pending_prompt" not in st.session_state:
+    st.session_state.pending_prompt = None
+
+if "messages" not in st.session_state:
+    st.session_state.messages = [
+        {"role": "assistant",
+         "content": "Welcome. I am your Domain Specific AI Assistant. I can help with University policies, Task Prioritization, and Course Recommendations."}
+    ]
 
 # Initial Chat History
 if "messages" not in st.session_state:
@@ -840,51 +853,85 @@ if menu == "Dashboard":
 # -----------------------------------------------------------------------------
 elif menu == "Chat Assistant":
 
+    from rag_client import send_rag_query_event, wait_for_run_output
+    import nest_asyncio
+    nest_asyncio.apply()
+
+    def query_rag(user_input: str) -> str:
+        """Send question to RAG pipeline via Inngest and wait for response."""
+        try:
+            event_id = asyncio.get_event_loop().run_until_complete(
+                send_rag_query_event(question=user_input, top_k=5)
+            )
+            output = wait_for_run_output(event_id, timeout_s=120)
+            return output.get("answer") or output.get("response") or str(output)
+
+        except TimeoutError:
+            return "⚠️ The RAG pipeline timed out. Please try again."
+        except requests.exceptions.ConnectionError:
+            return "⚠️ Cannot connect to Inngest. Make sure `inngest dev` is running."
+        except Exception as e:
+            return f"⚠️ Error: {str(e)}"
+
+    def stream_text(text: str, delay: float = 0.015):
+        """Simulate streaming by yielding characters."""
+        for char in text:
+            yield char
+            time.sleep(delay)
+
+    def handle_response(user_input: str):
+        """Query RAG, stream the reply, persist both messages."""
+        st.session_state.messages.append({"role": "user", "content": user_input})
+
+        with st.chat_message("user"):
+            st.markdown(user_input)
+
+        with st.chat_message("assistant"):
+            with st.spinner("🔍 Searching knowledge base..."):
+                full_resp = query_rag(user_input)
+
+            placeholder = st.empty()
+            streamed = ""
+            for chunk in stream_text(full_resp):
+                streamed += chunk
+                placeholder.markdown(streamed + "▌")
+            placeholder.markdown(streamed)
+
+            st.session_state.messages.append({"role": "assistant", "content": streamed})
+
+    # ─── Layout ───────────────────────────────────────────────
     col_chat, col_info = st.columns([3, 1])
 
     with col_info:
         st.markdown('<div class="css-card">', unsafe_allow_html=True)
         st.markdown("#### 💡 Quick Prompts")
-        prompts = [
-            "When is the proposal due?",
-            "What is the policy on plagiarism?",
-            "Draft an email to my supervisor.",
-            "Summarize my workload."
-        ]
-        for p in prompts:
-            if st.button(p, key=p, use_container_width=True):
-                st.session_state.messages.append({"role": "user", "content": p})
-                st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
 
-        st.info("System connected to University Knowledge Base (Mock)")
+        prompts = [
+            "What are the learning outcomes of Programming fundamentals?",
+            "Approved list of hospitals for mitigation form",
+            "Difference between Programming Fundamentals and Object Oriented Programming?",
+        ]
+
+        for p in prompts:
+            if st.button(p, key=f"qp_{p}", use_container_width=True):
+                st.session_state.pending_prompt = p
+                st.rerun()
+
+        st.markdown('</div>', unsafe_allow_html=True)
+        st.info("🔗 Connected to RAG pipeline via Inngest (local dev)")
 
     with col_chat:
         for msg in st.session_state.messages:
             with st.chat_message(msg["role"]):
                 st.markdown(msg["content"])
 
+        if st.session_state.pending_prompt:
+            prompt = st.session_state.pending_prompt
+            st.session_state.pending_prompt = None
+            handle_response(prompt)
+
         if user_input := st.chat_input("Ask the Domain AI..."):
-            st.session_state.messages.append({"role": "user", "content": user_input})
-            with st.chat_message("user"):
-                st.markdown(user_input)
-
-            with st.chat_message("assistant"):
-                # Mock Logic
-                response = "I am analyzing the university database..."
-                if "due" in user_input or "deadline" in user_input:
-                    response = "Based on your Task Manager, the **Final Year Project Proposal** is your most critical deadline, due in 2 days. The system recommends dedicating 4 hours today."
-                elif "policy" in user_input:
-                    response = "According to the *Academic Integrity Policy 2025*, plagiarism is a Level 1 offense. Turnitin reports must be below 20% similarity."
-
-                # Stream Response
-                placeholder = st.empty()
-                full_resp = ""
-                for chunk in stream_text(response):
-                    full_resp += chunk
-                    placeholder.markdown(full_resp + "▌")
-                placeholder.markdown(full_resp)
-                st.session_state.messages.append({"role": "assistant", "content": full_resp})
+            handle_response(user_input)
 
 # -----------------------------------------------------------------------------
 # 9. MODULE: TASK MANAGER
@@ -1050,7 +1097,7 @@ elif menu == "GPA Predictor":
 # PART 1: MODEL LOADING
 # ============================================================================
 
-    db = StudentDB(db_path=r"D:\IIT Stuff\Group Project\DomainSpecifiedAIAssistant project\Project\domain-ai\ml\CourseRecModel\students.db")
+    db = StudentDB(db_path=DB_PATH)
     MODEL_3YR_PATH = "3yrgpa_predictor_model.pkl"
     MODEL_4YR_PATH = "4yrgpa_predictor_model.pkl"
     DATA_PATH      = "final_dataset.csv"

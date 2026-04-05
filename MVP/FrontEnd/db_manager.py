@@ -1,10 +1,14 @@
 import sqlite3
 import pandas as pd
 from contextlib import contextmanager
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
+DB_PATH = BASE_DIR / "students.db"
 
 class StudentDB:
     # Update the default path to match your file name
-    def __init__(self, db_path=r"D:\OneDrive\Documents\IIT\STAGE 02\DSGP\Domain AI\MVP\FrontEnd\students.db"):
+    def __init__(self, db_path=DB_PATH):
         self.db_path = db_path
 
     @contextmanager
