@@ -1421,9 +1421,14 @@ elif menu == "GPA Predictor":
 # -----------------------------------------------------------------------------
 elif menu == "Course Recommender":
 
-
-        # --- PAGE CONFIG ---
     st.set_page_config(page_title="Course Recommender AI", page_icon="🎓", layout="centered")
+    if st.button("Generate AI Recommendations", use_container_width=True):
+        if not interests:
+            st.warning("Please select at least one academic interest to generate recommendations.")
+        else:
+          st.session_state.show_recs = True
+      
+   
 
     # --- CUSTOM CSS ---
     st.markdown("""
