@@ -39,7 +39,7 @@ warnings.filterwarnings("ignore")
 # ─────────────────────────────────────────────────────────────────────────────
 # CONFIGURATION
 # ─────────────────────────────────────────────────────────────────────────────
-DATA_PATH   = "/Users/thushanthmahendran/Frontend/domain-ai/ml/TaskPriority/processed_task_data.csv"
+DATA_PATH   = "D:\\OneDrive\\Documents\\IIT\\STAGE 02\\DSGP\\Domain AI\\ml\\TaskPriority\\processed_task_data.csv"
 OUTPUT_DIR  = "outputs"
 MODEL_DIR   = "saved_models"
 RANDOM_SEED = 42
