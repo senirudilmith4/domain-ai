@@ -11,11 +11,11 @@ import joblib
 import requests
 import asyncio
 
-phi_int_folder = r"D:\IIT Stuff\Group Project\DomainSpecifiedAIAssistant project\Project\domain-ai\ml\CourseRecModel"
+phi_int_folder = r"../../ml/CourseRecModel"
 sys.path.append(phi_int_folder)
 
 # --- Add db_manager folder to sys.path ---
-db_manager_folder = r"D:\IIT Stuff\Group Project\DomainSpecifiedAIAssistant project\Project\domain-ai\ml\CourseRecModel"
+db_manager_folder = r"../../ml/CourseRecModel"
 sys.path.append(db_manager_folder)
 
 from db_manager import StudentDB
@@ -1067,14 +1067,12 @@ elif menu == "GPA Predictor":
 
     # ✅ NO st.set_page_config() here — removed duplicate
 
-    db = StudentDB(db_path=r"D:\IIT Stuff\Group Project\DomainSpecifiedAIAssistant project\Project\domain-ai\ml\CourseRecModel\students.db")
-    MODEL_3YR_PATH = r"D:\IIT Stuff\Group Project\DomainSpecifiedAIAssistant project\Project\domain-ai\ml\CourseRecModel\3yrgpa_predictor_model.pkl"
-    MODEL_4YR_PATH = r"D:\IIT Stuff\Group Project\DomainSpecifiedAIAssistant project\Project\domain-ai\ml\CourseRecModel\4yrgpa_predictor_model.pkl"
-    DATA_PATH      = "D:\IIT Stuff\Group Project\DomainSpecifiedAIAssistant project\Project\domain-ai\ml\CourseRecModel\Final_Dataset.csv"
+    db = StudentDB(db_path=r"../../ml/CourseRecModel/students.db")
+    MODEL_3YR_PATH = r"../../ml/CourseRecModel/3yrgpa_predictor_model.pkl"
+    MODEL_4YR_PATH = r"../../ml/CourseRecModel/4yrgpa_predictor_model.pkl"
+    DATA_PATH      = r"../../ml/CourseRecModel/Final_Dataset.csv"
 
-    if not os.path.exists(MODEL_3YR_PATH) or not os.path.exists(MODEL_4YR_PATH):
-        st.error("Error: Required model files not found.")
-        st.stop()
+
 
     try:
         model_3yr = joblib.load(MODEL_3YR_PATH)
@@ -1359,11 +1357,11 @@ elif menu == "Course Recommender":
     @st.cache_resource
     def load_assets():
         try:
-            knn3    = joblib.load(r'D:\IIT Stuff\Group Project\DomainSpecifiedAIAssistant project\Project\domain-ai\ml\CourseRecModel\Stage3_elective_recommender_knn.pkl')
-            knn4    = joblib.load(r'D:\IIT Stuff\Group Project\DomainSpecifiedAIAssistant project\Project\domain-ai\ml\CourseRecModel\Stage4_elective_recommender_knn.pkl')
-            scaler3 = joblib.load(r'D:\IIT Stuff\Group Project\DomainSpecifiedAIAssistant project\Project\domain-ai\ml\CourseRecModel\gpa_scaler.pkl')
-            scaler4 = joblib.load(r'D:\IIT Stuff\Group Project\DomainSpecifiedAIAssistant project\Project\domain-ai\ml\CourseRecModel\gpa_scaler4.pkl')
-            dataset = pd.read_csv(r'D:\IIT Stuff\Group Project\DomainSpecifiedAIAssistant project\Project\domain-ai\ml\CourseRecModel\Final_Dataset.csv')
+            knn3    = joblib.load(r'../../ml/CourseRecModel/Stage3_elective_recommender_knn.pkl')
+            knn4    = joblib.load(r'../../ml/CourseRecModel/Stage4_elective_recommender_knn.pkl')
+            scaler3 = joblib.load(r'../../ml/CourseRecModel/gpa_scaler.pkl')
+            scaler4 = joblib.load(r'../../ml/CourseRecModel/gpa_scaler4.pkl')
+            dataset = pd.read_csv(r'../../ml/CourseRecModel/Final_Dataset.csv')
             return knn3, knn4, scaler3, scaler4, dataset
         except Exception as e:
             st.error(f"⚠️ Error loading files: {e}")
