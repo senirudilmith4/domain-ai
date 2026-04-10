@@ -1231,13 +1231,7 @@ elif menu == "GPA Predictor":
     # PART 4: STREAMLIT UI
     # ============================================================================
 
-    st.set_page_config(
-        page_title="GPA Prediction with AI Advisor",
-        layout="wide",
-        initial_sidebar_state="expanded",
-        page_icon="🎓"
-    )
-
+ 
     st.markdown("Get your GPA prediction **PLUS** personalized improvement strategies powered by ML")
 
     prediction_task = st.selectbox(
@@ -1283,11 +1277,7 @@ elif menu == "GPA Predictor":
             with col1:
                 st.metric(label=f"Predicted Year {target_year} GPA",
                         value=f"{predicted_gpa:.3f}")
-            with col2:
-                if predicted_gpa >= intervention_system.gpa_threshold:
-                    st.success("✅ On Track")
-                else:
-                    st.warning("⚠️ Needs Attention")
+           
             with col3:
                 if predicted_gpa >= 3.7:
                     grade_label = "Excellent (A)"; st.balloons()
@@ -1341,8 +1331,8 @@ elif menu == "GPA Predictor":
                             st.markdown(f"**Domain:** {intervention['domain'].replace('_', ' ').title()}")
                             st.markdown(f"**FPP Score:** {fpp:.2f}")
             else:
-                st.markdown("## ✅ Excellent Profile!")
-                st.success("No critical interventions needed. Keep up the great work!")
+                st.markdown("## Improvement Profile!")
+                st.success("No critical interventions available for the current profile")
                 if predicted_gpa < intervention_system.gpa_threshold:
                     st.info("Focus on maintaining current good habits!")
 
@@ -1399,8 +1389,6 @@ elif menu == "GPA Predictor":
 elif menu == "Course Recommender":
 
 
-        # --- PAGE CONFIG ---
-    st.set_page_config(page_title="Course Recommender AI", page_icon="🎓", layout="centered")
 
     # --- CUSTOM CSS ---
     st.markdown("""
@@ -1411,7 +1399,7 @@ elif menu == "Course Recommender":
             background-color: #007bff; color: white; font-weight: bold;
         }
         .result-box { 
-            padding: 20px; border-radius: 10px; background-color: white; 
+            padding: 20px; border-radius: 10px; background-color: Black; 
             border-left: 5px solid #28a745; box-shadow: 2px 2px 10px rgba(0,0,0,0.1); 
             margin-top: 20px;
         }

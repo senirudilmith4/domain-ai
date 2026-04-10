@@ -5,11 +5,20 @@ import plotly.express as px
 import time
 from datetime import date, datetime, timedelta
 import os
+import sys
 import numpy as np
 import joblib
-from db_manager import StudentDB, DB_PATH
 import requests
 import asyncio
+
+phi_int_folder = r"../../ml/CourseRecModel"
+sys.path.append(phi_int_folder)
+
+# --- Add db_manager folder to sys.path ---
+db_manager_folder = r"../../ml/CourseRecModel"
+sys.path.append(db_manager_folder)
+
+from db_manager import StudentDB
 
 # ── Import the separated PHI class ────────────────────────────────────────
 from PHI_INT import GPAInterventionSystem
@@ -1076,15 +1085,14 @@ elif menu == "Task Manager":
 # -----------------------------------------------------------------------------
 elif menu == "GPA Predictor":
 
-    # ✅ NO duplicate st.set_page_config() here
-    db             = StudentDB(db_path=DB_PATH)
-    MODEL_3YR_PATH = "3yrgpa_predictor_model.pkl"
-    MODEL_4YR_PATH = "4yrgpa_predictor_model.pkl"
-    DATA_PATH      = "final_dataset.csv"
+    # ✅ NO st.set_page_config() here — removed duplicate
 
-    if not os.path.exists(MODEL_3YR_PATH) or not os.path.exists(MODEL_4YR_PATH):
-        st.error("Error: Required model files not found.")
-        st.stop()
+    db = StudentDB(db_path=r"../../ml/CourseRecModel/students.db")
+    MODEL_3YR_PATH = r"../../ml/CourseRecModel/3yrgpa_predictor_model.pkl"
+    MODEL_4YR_PATH = r"../../ml/CourseRecModel/4yrgpa_predictor_model.pkl"
+    DATA_PATH      = r"../../ml/CourseRecModel/Final_Dataset.csv"
+
+
 
     try:
         model_3yr = joblib.load(MODEL_3YR_PATH)
@@ -1290,7 +1298,7 @@ elif menu == "GPA Predictor":
                             st.markdown(f"**Domain:** {intervention['domain'].replace('_',' ').title()}")
                             st.markdown(f"**FPP Score:** {fpp:.2f}")
             else:
-                st.markdown("## ✅ Excellent Profile!")
+                st.markdown("## ImprovementProfile!")
                 st.success("No critical interventions needed. Keep up the great work!")
                 if predicted_gpa < intervention_system.gpa_threshold:
                     st.info("Focus on maintaining current good habits!")
@@ -1351,11 +1359,11 @@ elif menu == "Course Recommender":
     @st.cache_resource
     def load_assets():
         try:
-            knn3    = joblib.load('Stage3_elective_recommender_knn.pkl')
-            knn4    = joblib.load('Stage4_elective_recommender_knn.pkl')
-            scaler3 = joblib.load('gpa_scaler.pkl')
-            scaler4 = joblib.load('gpa_scaler4.pkl')
-            dataset = pd.read_csv('final_dataset.csv')
+            knn3    = joblib.load(r'../../ml/CourseRecModel/Stage3_elective_recommender_knn.pkl')
+            knn4    = joblib.load(r'../../ml/CourseRecModel/Stage4_elective_recommender_knn.pkl')
+            scaler3 = joblib.load(r'../../ml/CourseRecModel/gpa_scaler.pkl')
+            scaler4 = joblib.load(r'../../ml/CourseRecModel/gpa_scaler4.pkl')
+            dataset = pd.read_csv(r'../../ml/CourseRecModel/Final_Dataset.csv')
             return knn3, knn4, scaler3, scaler4, dataset
         except Exception as e:
             st.error(f"⚠️ Error loading files: {e}")
